@@ -14,7 +14,6 @@ import java.security.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
 import org.tmatz.pocketmushroom.*;
-import java.util.*;
 
 public class MushroomActivity extends Activity implements OnClickListener
 {
@@ -71,6 +70,31 @@ public class MushroomActivity extends Activity implements OnClickListener
             return sb.toString();
         }
     }
+
+	private class DecryptViewBinder implements SimpleCursorAdapter.ViewBinder
+	{
+		private SecretKey mSecret;
+
+		public DecryptViewBinder(SecretKey secret)
+		{
+			mSecret = secret;
+		}
+
+		public boolean setViewValue(View v, Cursor c, int column)
+		{
+			String value = c.getString(column);
+			try
+			{
+				String decrypted = decrypt(mSecret, value);
+				((TextView) v).setText(decrypted);
+			}
+			catch (Exception e)
+			{
+				((TextView) v).setText(value);
+			}
+			return true;
+		}
+	}
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -132,31 +156,35 @@ public class MushroomActivity extends Activity implements OnClickListener
 			final EditText passwordEdit = (EditText) findViewById(R.id.password_text);
 			final TextView genPasswordHashView = (TextView) findViewById(R.id.generated_password_hash);
 			final Button okBtn = (Button) findViewById(R.id.ok_btn);
-			okBtn.setOnClickListener(new OnClickListener() {
-					public void onClick(View p1)
-					{
-						String hash = getHash(
-						    passwordEdit.getText().toString(),
-							passwordSaltView.getText().toString());
-						genPasswordHashView.setText(hash);
-					}
-				});
 			final Button cancelBtn = (Button) findViewById(R.id.cancel_btn);
-			cancelBtn.setOnClickListener(new OnClickListener() {
-					public void onClick(View p1)
-					{
-						finish();
-					}
-				});
 			Cursor c = mDatabase.rawQuery("select _id, title from entries", null);
 			final ListView listView = (ListView) findViewById(R.id.list_view);
-			ListAdapter listAdapter = new SimpleCursorAdapter(
+			final SimpleCursorAdapter listAdapter = new SimpleCursorAdapter(
 				this,
 				R.layout.entry,
 				c,
 				new String[] {COL_TITLE},
 				new int[] {R.id.title});
 			listView.setAdapter(listAdapter);
+			okBtn.setOnClickListener(new OnClickListener() {
+					public void onClick(View p1)
+					{
+						String password = passwordEdit.getText().toString();
+						String passwordSalt = passwordSaltView.getText().toString();
+						String encryptionSalt = encryptionSaltView.getText().toString();
+						String hash = getHash(password, passwordSalt);
+						genPasswordHashView.setText(hash);
+						SecretKey secret = getSecretKey(password, encryptionSalt);
+						listAdapter.setViewBinder(new DecryptViewBinder(secret));
+						listView.invalidateViews();
+					}
+				});
+			cancelBtn.setOnClickListener(new OnClickListener() {
+					public void onClick(View p1)
+					{
+						finish();
+					}
+				});
         }
     }
 
