@@ -1,31 +1,20 @@
 package pocketmushroom;
 
-import android.app.Activity;
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.Button;
-import org.tmatz.pocketmushroom.R;
-import android.widget.*;
+import android.app.*;
+import android.content.*;
 import android.content.pm.*;
-import android.content.pm.PackageManager.*;
-import java.io.FileReader;
-import java.io.BufferedReader;
-import java.lang.RuntimeException;
-import java.lang.Throwable;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.SecureRandom;
-import javax.crypto.Cipher;
-import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.PBEKeySpec;
-import javax.crypto.spec.SecretKeySpec;
+import android.database.*;
+import android.database.sqlite.*;
 import android.os.*;
+import android.view.*;
+import android.view.View.*;
+import android.widget.*;
 import java.io.*;
+import java.security.*;
+import javax.crypto.*;
+import javax.crypto.spec.*;
+import org.tmatz.pocketmushroom.*;
+import java.util.*;
 
 public class MushroomActivity extends Activity implements OnClickListener
 {
@@ -40,10 +29,17 @@ public class MushroomActivity extends Activity implements OnClickListener
     private static final String PBE_ALGORITHM = "PBEWithSHA256And256BitAES-CBC-BC";
     private static final String CIPHER_ALGORITHM = "AES/CBC/PKCS5Padding";
     private static final String SECRET_KEY_ALGORITHM = "AES";
+	private static final String DATABASE_NAME = "wallet.db";
+	private static final String HASHFILE_NAME = "hash.txt";
+	private static final String COL_ID = "_id";
+	private static final String COL_TITLE = "title";
+	private static final String COL_NOTE = "note";
+	private static final String COL_GROUP_ID = "group_id";
     private String mReplaceString;
     private Button mReplaceBtn;
     private Button mCancelBtn;
     private EditText mPasswordEdit;
+	private SQLiteDatabase mDatabase;
 
     private class CryptoException extends RuntimeException
     {
@@ -82,6 +78,7 @@ public class MushroomActivity extends Activity implements OnClickListener
         super.onCreate(savedInstanceState);
         Intent it = getIntent();
         String action = it.getAction();
+		mDatabase = openDatabase();
         if (action != null && ACTION_INTERCEPT.equals(action))
 		{
             /* Simejiから呼出された時 */
@@ -116,7 +113,7 @@ public class MushroomActivity extends Activity implements OnClickListener
 			if (isExternalStorageReadable())
 			{
 				File dir = Environment.getExternalStorageDirectory();
-				File hashFile = new File(dir, "hash.txt");
+				File hashFile = new File(dir, HASHFILE_NAME);
 				try
 				{
 					FileReader fr = new FileReader(hashFile);
@@ -151,6 +148,15 @@ public class MushroomActivity extends Activity implements OnClickListener
 						finish();
 					}
 				});
+			Cursor c = mDatabase.rawQuery("select _id, title from entries", null);
+			final ListView listView = (ListView) findViewById(R.id.list_view);
+			ListAdapter listAdapter = new SimpleCursorAdapter(
+				this,
+				R.layout.entry,
+				c,
+				new String[] {COL_TITLE},
+				new int[] {R.id.title});
+			listView.setAdapter(listAdapter);
         }
     }
 
@@ -284,4 +290,21 @@ public class MushroomActivity extends Activity implements OnClickListener
         random.nextBytes(iv);
         return iv;
     }
+
+	private SQLiteDatabase openDatabase()
+	{
+		SQLiteDatabase db = null;
+		if (isExternalStorageReadable())
+		{
+			File dbFile = new File(Environment.getExternalStorageDirectory(), DATABASE_NAME);
+			if (dbFile.exists())
+			{
+				db = SQLiteDatabase.openDatabase(
+				    dbFile.getAbsolutePath(),
+					null,
+					SQLiteDatabase.OPEN_READONLY);
+			}
+		}
+		return db;
+	}
 }
