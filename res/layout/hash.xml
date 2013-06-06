@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical" android:layout_width="fill_parent"
+	android:layout_height="fill_parent">
+	<TextView android:layout_width="fill_parent"
+		android:layout_height="wrap_content" android:text="@string/hello" />
+	<TextView
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:text="salted password hash:"/>
+	<TextView android:id="@+id/salted_password_hash"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"/>
+	<TextView
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:text="version:"/>
+	<TextView android:id="@+id/version"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"/>
+	<TextView
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:text="new encryption method:"/>
+	<TextView android:id="@+id/new_encryption_method"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"/>
+	<TextView
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:text="password salt:"/>
+	<TextView android:id="@+id/password_salt"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"/>
+	<TextView
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:text="encryption salt:"/>
+	<TextView android:id="@+id/encryption_salt"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"/>
+	<TextView
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:text="password:"/>
+	<EditText android:id="@+id/password_text"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:password="true"/>
+	<TextView
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:text="generated password hash:"/>
+	<TextView android:id="@+id/generated_password_hash"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:text="(generated password hash)"/>
+	<LinearLayout
+		android:orientation="horizontal"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content">
+		<Button android:id="@+id/ok_btn"
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:layout_weight="1"
+			android:text="@string/ok"/>
+		<Button android:id="@+id/cancel_btn"
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:layout_weight="1"
+			android:text="@string/cancel"/>
+	</LinearLayout>
+</LinearLayout>

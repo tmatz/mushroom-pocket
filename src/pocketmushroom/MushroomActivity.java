@@ -10,6 +10,8 @@ import org.tmatz.pocketmushroom.R;
 import android.widget.*;
 import android.content.pm.*;
 import android.content.pm.PackageManager.*;
+import java.io.FileReader;
+import java.io.BufferedReader;
 import java.lang.RuntimeException;
 import java.lang.Throwable;
 import java.security.MessageDigest;
@@ -22,6 +24,8 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
+import android.os.*;
+import java.io.*;
 
 public class MushroomActivity extends Activity implements OnClickListener
 {
@@ -60,7 +64,7 @@ public class MushroomActivity extends Activity implements OnClickListener
             }
             return bytes;
         }
-        
+
         public static String toHex(byte[] bytes)
         {
             StringBuilder sb = new StringBuilder();
@@ -103,9 +107,64 @@ public class MushroomActivity extends Activity implements OnClickListener
 		else
 		{
             // Simeji以外から呼出された時
-            setContentView(R.layout.password);
+            setContentView(R.layout.hash);
+			final TextView saltedPasswordHashView = (TextView) findViewById(R.id.salted_password_hash);
+			final TextView versionView = (TextView) findViewById(R.id.version);
+			final TextView newEncryptionMethodView = (TextView) findViewById(R.id.new_encryption_method);
+			final TextView passwordSaltView = (TextView) findViewById(R.id.password_salt);
+			final TextView encryptionSaltView = (TextView) findViewById(R.id.encryption_salt);
+			if (isExternalStorageReadable())
+			{
+				File dir = Environment.getExternalStorageDirectory();
+				File hashFile = new File(dir, "hash.txt");
+				try
+				{
+					FileReader fr = new FileReader(hashFile);
+					BufferedReader br = new BufferedReader(fr);
+					saltedPasswordHashView.setText(br.readLine());
+					versionView.setText(br.readLine());
+					newEncryptionMethodView.setText(br.readLine());
+					passwordSaltView.setText(br.readLine());
+					encryptionSaltView.setText(br.readLine());
+				}
+				catch (FileNotFoundException e)
+				{}
+				catch (IOException e)
+				{}
+			}
+			final EditText passwordEdit = (EditText) findViewById(R.id.password_text);
+			final TextView genPasswordHashView = (TextView) findViewById(R.id.generated_password_hash);
+			final Button okBtn = (Button) findViewById(R.id.ok_btn);
+			okBtn.setOnClickListener(new OnClickListener() {
+					public void onClick(View p1)
+					{
+						String hash = getHash(
+						    passwordEdit.getText().toString(),
+							passwordSaltView.getText().toString());
+						genPasswordHashView.setText(hash);
+					}
+				});
+			final Button cancelBtn = (Button) findViewById(R.id.cancel_btn);
+			cancelBtn.setOnClickListener(new OnClickListener() {
+					public void onClick(View p1)
+					{
+						finish();
+					}
+				});
         }
     }
+
+	/* Checks if external storage is available to at least read */
+	public boolean isExternalStorageReadable()
+	{
+		String state = Environment.getExternalStorageState();
+		if (Environment.MEDIA_MOUNTED.equals(state) ||
+			Environment.MEDIA_MOUNTED_READ_ONLY.equals(state))
+		{
+			return true;
+		}
+		return false;
+	}
 
     public void onClick(View v)
 	{
@@ -132,6 +191,25 @@ public class MushroomActivity extends Activity implements OnClickListener
         setResult(RESULT_OK, data);
         finish();
     }
+
+	public String encrypt(SecretKey secret, String cleartext) throws CryptoException
+	{
+		try
+		{
+			byte[] iv = generateIv();
+			String ivHex = HexEncoder.toHex(iv);
+			IvParameterSpec ivspec = new IvParameterSpec(iv);
+			Cipher encryptionCipher = Cipher.getInstance(CIPHER_ALGORITHM, PROVIDER);
+			encryptionCipher.init(Cipher.ENCRYPT_MODE, secret, ivspec);
+			byte[] encryptedText = encryptionCipher.doFinal(cleartext.getBytes("UTF-8"));
+			String encryptedHex = HexEncoder.toHex(encryptedText);
+			return ivHex + encryptedHex;
+		}
+		catch (Exception e)
+		{
+			throw new CryptoException("Unable to encrypt", e);
+		}
+	}
 
     private String decrypt(SecretKey secret, String encrypted) throws CryptoException
     {
@@ -199,7 +277,7 @@ public class MushroomActivity extends Activity implements OnClickListener
         }
     }
 
-    private byte[] generateIv() throws NoSuchAlgorithmException, NoSuchProviderException
+    private byte[] generateIv() throws NoSuchAlgorithmException
     {
         SecureRandom random = SecureRandom.getInstance(RANDOM_ALGORITHM);
         byte[] iv = new byte[IV_LENGTH];

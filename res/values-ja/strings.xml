@@ -2,6 +2,7 @@
 <resources>
 	<string name="hello">Pocketマッシュルーム</string>
 	<string name="app_name">Pocketマッシュルーム</string>
+	<string name="ok">OK</string>
 	<string name="replace">OK</string>
 	<string name="cancel">Cancel</string>
 </resources>

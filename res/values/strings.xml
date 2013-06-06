@@ -2,6 +2,7 @@
 <resources>
 	<string name="hello">Pocket Mushroom</string>
 	<string name="app_name">Pocket Mushroom</string>
+	<string name="ok">OK</string>
 	<string name="replace">OK</string>
 	<string name="cancel">Cancel</string>
 </resources>
