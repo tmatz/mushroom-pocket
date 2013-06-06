@@ -1,4 +1,4 @@
-package org.tmatz.pocketmashroom;
+package pocketmushroom;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import org.tmatz.pocketmushroom.R;
 
 public class MushroomActivity extends Activity implements OnClickListener {
     private static final String ACTION_INTERCEPT = "com.adamrocker.android.simeji.ACTION_INTERCEPT";
