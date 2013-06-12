@@ -14,8 +14,10 @@ import java.security.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
 import org.tmatz.pocketmushroom.*;
+import java.util.*;
+import pocketmushroom.MushroomActivity.*;
 
-public class MushroomActivity extends Activity implements OnClickListener
+public class MushroomActivity extends Activity
 {
     private static final String ACTION_INTERCEPT = "com.adamrocker.android.simeji.ACTION_INTERCEPT";
     private static final String REPLACE_KEY = "replace_key";
@@ -34,19 +36,26 @@ public class MushroomActivity extends Activity implements OnClickListener
 	private static final String COL_TITLE = "title";
 	private static final String COL_NOTE = "note";
 	private static final String COL_GROUP_ID = "group_id";
-    private String mReplaceString;
-    private Button mReplaceBtn;
-    private Button mCancelBtn;
-    private EditText mPasswordEdit;
-	private SQLiteDatabase mDatabase;
+	private static final String STATE_GROUP_ID = "group_id";
+	private static final String STATE_ENTRY_ID = "entry_id";
+	private static final int REQUEST_LOGIN = 1;
 
-    private class CryptoException extends RuntimeException
-    {
-        public CryptoException(String msg, Throwable e)
-        {
-            super(msg, e);
-        }
-    }
+    private String mReplaceString;
+	private ListView mEntryList;
+	private SQLiteDatabase mDatabase;
+	private int mGroupId = -1;
+	private int mEntryId = -1;
+	private String mPasswordHash;
+	private String mVersion;
+	private String mEncriptionMethod;
+	private String mPasswordSalt;
+	private String mEncriptionSalt;
+	private SecretKey mSecretKey;
+	private String mPassword;
+	private HashData mHashData;
+	private String mCallingPackage;
+
+
 
     private static class HexEncoder
     {
@@ -96,97 +105,115 @@ public class MushroomActivity extends Activity implements OnClickListener
 		}
 	}
 
+	@Override
+	public void onSaveInstanceState(Bundle outState)
+	{
+		outState.putInt(STATE_GROUP_ID, mGroupId);
+		outState.putInt(STATE_ENTRY_ID, mEntryId);
+	}
+
     @Override
     public void onCreate(Bundle savedInstanceState)
 	{
         super.onCreate(savedInstanceState);
-        Intent it = getIntent();
-        String action = it.getAction();
+
+		if (savedInstanceState != null)
+		{
+			mGroupId = savedInstanceState.getInt(STATE_GROUP_ID, -1);
+			mEntryId = savedInstanceState.getInt(STATE_ENTRY_ID, -1);
+		}
+
 		mDatabase = openDatabase();
-        if (action != null && ACTION_INTERCEPT.equals(action))
+		mHashData = openHastData();
+
+		if (mDatabase == null || mHashData == null)
 		{
-            /* Simejiから呼出された時 */
-            mReplaceString = it.getStringExtra(REPLACE_KEY);// 置換元の文字を取得
-            setContentView(R.layout.password);
-            mReplaceBtn = (Button) findViewById(R.id.replace_btn);
-            mReplaceBtn.setOnClickListener(this);
-            mCancelBtn = (Button) findViewById(R.id.cancel_btn);
-            mCancelBtn.setOnClickListener(this);
-            mPasswordEdit = (EditText) findViewById(R.id.password_text);
-			ImageView appIconView = (ImageView) findViewById(R.id.applicatio_icon);
-			TextView appLabelView = (TextView) findViewById(R.id.application_label);
-			PackageManager pm = getPackageManager();
-			try
-			{
-				ApplicationInfo appInfo = pm.getApplicationInfo(getCallingPackage(), 0);
-				appIconView.setImageDrawable(pm.getApplicationIcon(appInfo));
-				appLabelView.setText(pm.getApplicationLabel(appInfo));
-			}
-			catch (PackageManager.NameNotFoundException e)
-			{}
-        }
-		else
+			Toast.makeText(this, R.string.cant_open_pocket, Toast.LENGTH_SHORT).show();
+			finish();
+			return;
+		}
+
+		if (getCallingPackage() == null || !getCallingPackage().equals(mCallingPackage))
 		{
-            // Simeji以外から呼出された時
-            setContentView(R.layout.hash);
-			final TextView saltedPasswordHashView = (TextView) findViewById(R.id.salted_password_hash);
-			final TextView versionView = (TextView) findViewById(R.id.version);
-			final TextView newEncryptionMethodView = (TextView) findViewById(R.id.new_encryption_method);
-			final TextView passwordSaltView = (TextView) findViewById(R.id.password_salt);
-			final TextView encryptionSaltView = (TextView) findViewById(R.id.encryption_salt);
-			if (isExternalStorageReadable())
+			mSecretKey = null;
+			mPassword = null;
+		}
+		mCallingPackage = getCallingPackage();
+
+		if (mSecretKey == null && mPassword != null)
+		{
+			mSecretKey = getDatabaseSecretKey(mPassword, mHashData);
+			if (mSecretKey == null)
 			{
-				File dir = Environment.getExternalStorageDirectory();
-				File hashFile = new File(dir, HASHFILE_NAME);
-				try
-				{
-					FileReader fr = new FileReader(hashFile);
-					BufferedReader br = new BufferedReader(fr);
-					saltedPasswordHashView.setText(br.readLine());
-					versionView.setText(br.readLine());
-					newEncryptionMethodView.setText(br.readLine());
-					passwordSaltView.setText(br.readLine());
-					encryptionSaltView.setText(br.readLine());
-				}
-				catch (FileNotFoundException e)
-				{}
-				catch (IOException e)
-				{}
+				Toast.makeText(this, R.string.wrong_password, Toast.LENGTH_SHORT).show();
 			}
-			final EditText passwordEdit = (EditText) findViewById(R.id.password_text);
-			final TextView genPasswordHashView = (TextView) findViewById(R.id.generated_password_hash);
-			final Button okBtn = (Button) findViewById(R.id.ok_btn);
-			final Button cancelBtn = (Button) findViewById(R.id.cancel_btn);
-			Cursor c = mDatabase.rawQuery("select _id, title from entries", null);
-			final ListView listView = (ListView) findViewById(R.id.list_view);
-			final SimpleCursorAdapter listAdapter = new SimpleCursorAdapter(
-				this,
-				R.layout.entry,
-				c,
-				new String[] {COL_TITLE},
-				new int[] {R.id.title});
-			listView.setAdapter(listAdapter);
-			okBtn.setOnClickListener(new OnClickListener() {
-					public void onClick(View p1)
-					{
-						String password = passwordEdit.getText().toString();
-						String passwordSalt = passwordSaltView.getText().toString();
-						String encryptionSalt = encryptionSaltView.getText().toString();
-						String hash = getHash(password, passwordSalt);
-						genPasswordHashView.setText(hash);
-						SecretKey secret = getSecretKey(password, encryptionSalt);
-						listAdapter.setViewBinder(new DecryptViewBinder(secret));
-						listView.invalidateViews();
-					}
-				});
-			cancelBtn.setOnClickListener(new OnClickListener() {
-					public void onClick(View p1)
-					{
-						finish();
-					}
-				});
-        }
+		}
+		if (mSecretKey == null)
+		{
+			showLoginActivity();
+		}
+
+		setContentView(R.layout.mushroom);
+		mEntryList = (ListView) findViewById(R.id.list_view);
     }
+
+	private void showLoginActivity()
+	{
+		Intent intent = new Intent();
+		intent.setAction(LoginActivity.ACTION_LOGIN);
+		intent.putExtra(LoginActivity.EXTRA_PACKAGE_NAME, mCallingPackage);
+		intent.putExtra(LoginActivity.EXTRA_HASH_DATA, mHashData);
+		startActivityForResult(intent, REQUEST_LOGIN);
+	}
+
+	private void showEntryList()
+	{
+		Cursor c = mDatabase.rawQuery("select _id, title from entries", null);
+		SimpleCursorAdapter listAdapter = new SimpleCursorAdapter(
+			this,
+			R.layout.entry,
+			c,
+			new String[] {COL_TITLE},
+			new int[] {R.id.title});
+		mEntryList.setAdapter(listAdapter);
+		listAdapter.setViewBinder(new DecryptViewBinder(mSecretKey));
+		mEntryList.invalidateViews();
+	}
+
+	@Override
+	public void onActivityResult(int request, int result, Intent data)
+	{
+		super.onActivityResult(request, result, data);
+
+		switch (request)
+		{
+			case REQUEST_LOGIN:
+				{
+					if (result == RESULT_OK)
+					{
+						mPassword = data.getStringExtra(LoginActivity.EXTRA_PASSWORD);
+						mSecretKey = getDatabaseSecretKey(mPassword, mHashData);
+						if (mSecretKey == null)
+						{
+							Toast.makeText(this, R.string.wrong_password, Toast.LENGTH_SHORT).show();
+							showLoginActivity();
+						}
+						showEntryList();
+					}
+				}
+				break;
+		}
+	}
+
+	public static SecretKey getDatabaseSecretKey(String password, HashData hashData) throws CryptoException
+	{
+		String genPasswordHash = getHash(password, hashData.passwordSalt);
+		if (!genPasswordHash.equals(hashData.passwordHash))
+		{
+			return null;
+		}
+		return getSecretKey(password, hashData.encryptionSalt);
+	}
 
 	/* Checks if external storage is available to at least read */
 	public boolean isExternalStorageReadable()
@@ -200,20 +227,6 @@ public class MushroomActivity extends Activity implements OnClickListener
 		return false;
 	}
 
-    public void onClick(View v)
-	{
-        String result = null;
-        if (v == mReplaceBtn)
-		{
-            result = getCallingPackage();
-        }
-		else if (v == mCancelBtn)
-		{
-            result = mReplaceString;
-        }
-        replace(result);
-    }
-
     /**
      * 元の文字を置き換える
      * @param result Replacing string
@@ -226,7 +239,7 @@ public class MushroomActivity extends Activity implements OnClickListener
         finish();
     }
 
-	public String encrypt(SecretKey secret, String cleartext) throws CryptoException
+	public static String encrypt(SecretKey secret, String cleartext) throws CryptoException
 	{
 		try
 		{
@@ -245,7 +258,7 @@ public class MushroomActivity extends Activity implements OnClickListener
 		}
 	}
 
-    private String decrypt(SecretKey secret, String encrypted) throws CryptoException
+    public static String decrypt(SecretKey secret, String encrypted) throws CryptoException
     {
         try
         {
@@ -264,7 +277,7 @@ public class MushroomActivity extends Activity implements OnClickListener
         }
     }
 
-    private SecretKey getSecretKey(String password, String salt) throws CryptoException
+    public static SecretKey getSecretKey(String password, String salt) throws CryptoException
     {
         try
         {
@@ -280,7 +293,7 @@ public class MushroomActivity extends Activity implements OnClickListener
         }
     }
 
-    private String getHash(String password, String salt) throws CryptoException
+    public static String getHash(String password, String salt) throws CryptoException
     {
         try
         {
@@ -295,7 +308,7 @@ public class MushroomActivity extends Activity implements OnClickListener
         }
     }
 
-    private String generateSalt() throws CryptoException
+    public static String generateSalt() throws CryptoException
     {
         try
         {
@@ -311,7 +324,7 @@ public class MushroomActivity extends Activity implements OnClickListener
         }
     }
 
-    private byte[] generateIv() throws NoSuchAlgorithmException
+    private static byte[] generateIv() throws NoSuchAlgorithmException
     {
         SecureRandom random = SecureRandom.getInstance(RANDOM_ALGORITHM);
         byte[] iv = new byte[IV_LENGTH];
@@ -334,5 +347,32 @@ public class MushroomActivity extends Activity implements OnClickListener
 			}
 		}
 		return db;
+	}
+
+	private HashData openHastData()
+	{
+		if (!isExternalStorageReadable())
+		{
+			return null;
+		}
+
+		File dir = Environment.getExternalStorageDirectory();
+		File hashFile = new File(dir, HASHFILE_NAME);
+		try
+		{
+			FileReader fr = new FileReader(hashFile);
+			BufferedReader br = new BufferedReader(fr);
+			HashData hd = new HashData();
+			hd.passwordHash = br.readLine();
+			hd.version = br.readLine();
+			hd.encryptionMethod = br.readLine();
+			hd.passwordSalt = br.readLine();
+			hd.encryptionSalt = br.readLine();
+			return hd;
+		}
+		catch (Exception e)
+		{
+			return null;
+		}
 	}
 }
