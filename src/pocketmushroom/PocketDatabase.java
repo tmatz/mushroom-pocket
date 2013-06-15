@@ -21,9 +21,15 @@ public class PocketDatabase
 	public static final String COL_ICON = "icon";
 	public static final String COL_IS_HIDDEN = "is_hodden";
 	
-	public static SQLiteDatabase openDatabase()
+	private static SQLiteDatabase sDatabase;
+	
+	public synchronized static SQLiteDatabase openDatabase()
 	{
-		SQLiteDatabase db = null;
+		if (sDatabase != null)
+		{
+			return sDatabase;
+		}
+		
 		if (Utilities.isExternalStorageReadable())
 		{
 			File dbFile = new File(
@@ -31,12 +37,12 @@ public class PocketDatabase
 				, PocketDatabase.DATABASE_NAME);
 			if (dbFile.exists())
 			{
-				db = SQLiteDatabase.openDatabase(
+				sDatabase = SQLiteDatabase.openDatabase(
 				    dbFile.getAbsolutePath(),
 					null,
 					SQLiteDatabase.OPEN_READONLY);
 			}
 		}
-		return db;
+		return sDatabase;
 	}
 }
