@@ -2,13 +2,15 @@ package pocketmushroom;
 
 public class CryptoException extends RuntimeException
 {
-	public CryptoException(String msg, Throwable e)
+	public int id;
+	
+	public CryptoException(int id, Throwable e)
 	{
-		super(msg, e);
+		super(e);
+		this.id = id;
 	}
-
-	public CryptoException(String msg)
+	public CryptoException(int id)
 	{
-		super(msg);
+		this.id = id;
 	}
 }

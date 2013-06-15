@@ -6,7 +6,11 @@
 	<string name="replace">OK</string>
 	<string name="cancel">Cancel</string>
 	<string name="cant_open_pocket">Can not open Pocket.</string>
-	<string name="exception_file_not_found">File not found.</string>
-	<string name="exception_file_can_not_read">File can not read.</string>
+	<string name="exception_file_not_found">Pocket file not found.</string>
+	<string name="exception_file_can_not_read">Pocket file can not read.</string>
+	<string name="exception_storage_not_readable">Storage not readable</string>
+	<string name="exception_wrong_password">Wrong password</string>
+	<string name="exception_encryption_failed">Encryption failed</string>
+	<string name="exception_decryption_failed">Decryption failed</string>
 	<string name="wrong_password">Wrong password.</string>
 </resources>

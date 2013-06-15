@@ -12,13 +12,13 @@ import javax.crypto.*;
 
 public class LoginActivity extends Activity
 {
-	public static final String EXTRA_PACKAGE_NAME = "package_name";
-	public static final String EXTRA_HASH_DATA = "hash_data";
-	public static final String EXTRA_PASSWORD = "password";
 	public static final String ACTION_LOGIN = "org.tmatz.pocketmushroom.ACTION_LOGIN";
+	public static final String EXTRA_PACKAGE_NAME = "calling_package_name";
 
+	private static final Object sMutex = new Object();
+	
+	private PocketLock mPocketLock;
 	private EditText mPasswordEdit;
-	private HashData mHashData;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState)
@@ -27,9 +27,22 @@ public class LoginActivity extends Activity
 
 		Intent intent = getIntent();
 		String callingPackage = intent.getStringExtra(EXTRA_PACKAGE_NAME);
-		mHashData = intent.getParcelableExtra(EXTRA_HASH_DATA);
 
-		setContentView(R.layout.password);
+		if (callingPackage == null)
+		{
+			setResult(RESULT_CANCELED);
+			finish();
+			return;
+		}
+
+		if (!CreatePocketLock(callingPackage))
+		{
+			setResult(RESULT_CANCELED);
+			finish();
+			return;
+		}
+
+		setContentView(R.layout.login_activity);
 		final ImageView appIconView = (ImageView) findViewById(R.id.applicatio_icon);
 		final TextView appLabelView = (TextView) findViewById(R.id.application_label);
 		mPasswordEdit = (EditText) findViewById(R.id.password_text);
@@ -77,15 +90,36 @@ public class LoginActivity extends Activity
 			});
 	}
 
+	private boolean CreatePocketLock(String packageName)
+	{
+		synchronized (sMutex)
+		{
+			try
+			{
+				mPocketLock = new PocketLock(packageName);
+				return true;
+			}
+			catch (CryptoException e)
+			{
+				Toast.makeText(this, e.id, Toast.LENGTH_SHORT).show();
+				return false;
+			}
+		}
+	}
+	
 	private void CheckPassword()
 	{
 		String password = mPasswordEdit.getText().toString();
-		if (MushroomActivity.getDatabaseSecretKey(password, mHashData) != null)
+		try
 		{
-			Intent intent = new Intent();
-			intent.putExtra(EXTRA_PASSWORD, password);
-			setResult(RESULT_OK, intent);
+			mPocketLock.unlock(password);
+			PocketLock.setPocketLock(mPocketLock);
+			setResult(RESULT_OK);
 			finish();
+		}
+		catch (CryptoException e)
+		{
+			Toast.makeText(this, e.id, Toast.LENGTH_SHORT);
 		}
 	}
 }

@@ -18,6 +18,13 @@
 				<category android:name="android.intent.category.DEFAULT" />
 			</intent-filter>
 		</activity>
+		<activity android:name="pocketmushroom.EntryDetailActivity" android:icon="@drawable/icon"
+			android:label="@string/app_name">
+			<intent-filter>
+				<action android:name="org.tmatz.pocketmushroom.ACTION_ENTRY_DETAIL" />
+				<category android:name="android.intent.category.DEFAULT" />
+			</intent-filter>
+		</activity>
 		<activity android:name="pocketmushroom.LoginActivity" android:icon="@drawable/icon"
 			android:label="@string/app_name">
 			<intent-filter>
