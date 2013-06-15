@@ -2,40 +2,34 @@ package pocketmushroom;
 
 import android.app.*;
 import android.content.*;
-import android.content.pm.*;
 import android.database.*;
 import android.database.sqlite.*;
 import android.os.*;
 import android.view.*;
-import android.view.View.*;
 import android.widget.*;
-import java.io.*;
-import java.security.*;
-import javax.crypto.*;
-import javax.crypto.spec.*;
 import org.tmatz.pocketmushroom.*;
-import java.util.*;
-import pocketmushroom.MushroomActivity.*;
 
 public class MushroomActivity extends Activity
 {
-    private static final String ACTION_INTERCEPT = "com.adamrocker.android.simeji.ACTION_INTERCEPT";
-    private static final String REPLACE_KEY = "replace_key";
+    public static final String ACTION_INTERCEPT = "com.adamrocker.android.simeji.ACTION_INTERCEPT";
+    public static final String EXTRA_REPLACE_KEY = "replace_key";
+	public static final String STATE_GROUP_ID = "group_id";
+	public static final String STATE_ENTRY_ID = "entry_id";
 	private static final int REQUEST_LOGIN = 1;
+	private static final String BACKSTACK_ENTRY_LIST = "backstack_entry_list";
+	private static final String BACKSTACK_ENTRY_DETAILS = "backstack_entry_details";
+	
 
-	private ListView mEntryList;
 	private SQLiteDatabase mDatabase;
 	private int mGroupId = -1;
 	private int mEntryId = -1;
 	private PocketLock mPocketLock;
 	private String mCallingPackage;
+	private int mBackStackEntryList;
+	private int mBackStackEntryDetails;
 
 	private class DecryptViewBinder implements SimpleCursorAdapter.ViewBinder
 	{
-		public DecryptViewBinder()
-		{
-		}
-
 		public boolean setViewValue(View v, Cursor c, int column)
 		{
 			String value = c.getString(column);
@@ -55,8 +49,8 @@ public class MushroomActivity extends Activity
 	@Override
 	public void onSaveInstanceState(Bundle outState)
 	{
-		outState.putInt(PocketDatabase.STATE_GROUP_ID, mGroupId);
-		outState.putInt(PocketDatabase.STATE_ENTRY_ID, mEntryId);
+		outState.putInt(STATE_GROUP_ID, mGroupId);
+		outState.putInt(STATE_ENTRY_ID, mEntryId);
 	}
 
     @Override
@@ -66,8 +60,8 @@ public class MushroomActivity extends Activity
 
 		if (savedInstanceState != null)
 		{
-			mGroupId = savedInstanceState.getInt(PocketDatabase.STATE_GROUP_ID, -1);
-			mEntryId = savedInstanceState.getInt(PocketDatabase.STATE_ENTRY_ID, -1);
+			mGroupId = savedInstanceState.getInt(STATE_GROUP_ID, -1);
+			mEntryId = savedInstanceState.getInt(STATE_ENTRY_ID, -1);
 		}
 
 		mCallingPackage = getCallingPackage();
@@ -79,7 +73,7 @@ public class MushroomActivity extends Activity
 			return;
 		}
 
-		mDatabase = openDatabase();
+		mDatabase = PocketDatabase.openDatabase();
 		if (mDatabase == null)
 		{
 			Toast.makeText(this, R.string.cant_open_pocket, Toast.LENGTH_SHORT).show();
@@ -89,14 +83,16 @@ public class MushroomActivity extends Activity
 		}
 
 		mPocketLock = PocketLock.getPocketLock(mCallingPackage);
-		
+
 		setContentView(R.layout.mushroom_activity);
-		mEntryList = (ListView) findViewById(R.id.list_view);
-		showEntryList();
-		
+
 		if (mPocketLock == null)
 		{
 			showLoginActivity();
+		}
+		else
+		{
+			initFragment();
 		}
     }
 
@@ -106,20 +102,6 @@ public class MushroomActivity extends Activity
 		intent.setAction(LoginActivity.ACTION_LOGIN);
 		intent.putExtra(LoginActivity.EXTRA_PACKAGE_NAME, mCallingPackage);
 		startActivityForResult(intent, REQUEST_LOGIN);
-	}
-
-	private void showEntryList()
-	{
-		Cursor c = mDatabase.rawQuery("select _id, title from entries", null);
-		SimpleCursorAdapter listAdapter = new SimpleCursorAdapter(
-			this,
-			R.layout.entry_list_item,
-			c,
-			new String[] {PocketDatabase.COL_TITLE},
-			new int[] {R.id.title});
-		mEntryList.setAdapter(listAdapter);
-		listAdapter.setViewBinder(new DecryptViewBinder());
-		mEntryList.invalidateViews();
 	}
 
 	@Override
@@ -140,12 +122,53 @@ public class MushroomActivity extends Activity
 						}
 						else
 						{
-							mEntryList.invalidateViews();
+							initFragment();
 						}
 					}
 				}
 				break;
 		}
+	}
+	
+	private void initFragment()
+	{
+		FragmentManager fm = getFragmentManager();
+
+		{
+			ListFragment f = new ListFragment();
+			Bundle args = new Bundle();
+			args.putString(ListFragment.ARG_PACKAGE_NAME, mCallingPackage);
+			f.setArguments(args);
+			fm.beginTransaction()
+				.replace(R.id.fragment, f)
+				.commit();
+		}
+
+//		if (mGroupId != -1)
+//		{
+//			ListFragment f = new ListFragment();
+//			Bundle args = new Bundle();
+//			args.putString(ListFragment.ARG_PACKAGE_NAME, mCallingPackage);
+//			args.putInt(ListFragment.ARG_GROUP_ID, mGroupId);
+//			f.setArguments(args);
+//			mBackStackEntryList = fm.beginTransaction()
+//				.add(R.id.fragment, f)
+//				.addToBackStack(BACKSTACK_ENTRY_LIST)
+//				.commit();
+//		}
+//
+//		if (mEntryId != -1)
+//		{
+//			EntryDetailFragment f = new EntryDetailFragment();
+//			Bundle args = new Bundle();
+//			args.putString(EntryDetailFragment.ARG_PACKAGE_NAME, mCallingPackage);
+//			args.putInt(EntryDetailFragment.ARG_ENTRY_ID, mEntryId);
+//			f.setArguments(args);
+//			mBackStackEntryDetails = fm.beginTransaction()
+//				.add(R.id.fragment, f)
+//				.addToBackStack(BACKSTACK_ENTRY_DETAILS)
+//				.commit();
+//		}
 	}
 
     /**
@@ -155,27 +178,8 @@ public class MushroomActivity extends Activity
     private void replace(String result)
 	{
         Intent data = new Intent();
-        data.putExtra(REPLACE_KEY, result);
+        data.putExtra(EXTRA_REPLACE_KEY, result);
         setResult(RESULT_OK, data);
         finish();
     }
-
-	private SQLiteDatabase openDatabase()
-	{
-		SQLiteDatabase db = null;
-		if (Utilities.isExternalStorageReadable())
-		{
-			File dbFile = new File(
-				Environment.getExternalStorageDirectory()
-				, PocketDatabase.DATABASE_NAME);
-			if (dbFile.exists())
-			{
-				db = SQLiteDatabase.openDatabase(
-				    dbFile.getAbsolutePath(),
-					null,
-					SQLiteDatabase.OPEN_READONLY);
-			}
-		}
-		return db;
-	}
 }
