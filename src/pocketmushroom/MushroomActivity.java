@@ -55,9 +55,9 @@ implements ListFragment.OnListItemClickListener
 
 		mLogBuilder.setLength(0);
 		Log.i(TAG, mLogBuilder
-			  .append("onSaveInstanceState ")
+			  .append("onSaveInstanceState group = ")
 			  .append(mGroupId)
-			  .append(", ")
+			  .append(", entry = ")
 			  .append(mEntryId)
 			  .toString());
 	}
@@ -78,11 +78,10 @@ implements ListFragment.OnListItemClickListener
 
 		mLogBuilder.setLength(0);
 		Log.i(TAG, mLogBuilder
-			  .append("restoreInstanceState ")
+			  .append("restoreInstanceState group = ")
 			  .append(mGroupId)
-			  .append(", ")
-			  .append(mEntryId)
-			  .toString());
+			  .append(", entry = ")
+			  .append(mEntryId).toString());
 	}
 
     @Override
@@ -95,14 +94,22 @@ implements ListFragment.OnListItemClickListener
 		if (!PocketDatabase.isReadable())
 		{
 			Toast.makeText(this, R.string.cant_open_pocket, Toast.LENGTH_SHORT).show();
+			Log.e(TAG, "pocket database is unreadable");
 			setResult(RESULT_CANCELED);
 			finish();
 			return;
 		}
 
         mCallingPackage = getCallingPackage();
-		mPocketLock = PocketLock.getPocketLock(mCallingPackage);
+		if (mCallingPackage == null)
+		{
+			Log.e(TAG, "calling package unkown");
+			setResult(RESULT_CANCELED);
+			finish();
+			return;
+		}
 
+		mPocketLock = PocketLock.getPocketLock(mCallingPackage);
 		setContentView(R.layout.mushroom_activity);
 
 		if (mPocketLock == null)
@@ -113,6 +120,8 @@ implements ListFragment.OnListItemClickListener
 		{
 			initFragment();
 		}
+
+		Log.i(TAG, "onCreate");
     }
 
 	@Override
@@ -125,6 +134,8 @@ implements ListFragment.OnListItemClickListener
 			.commit();
 
 		super.onStop();
+
+		Log.i(TAG, "onStop");
 	}
 
 	private void showLoginActivity()
@@ -133,6 +144,8 @@ implements ListFragment.OnListItemClickListener
 		intent.setAction(LoginActivity.ACTION_LOGIN);
 		intent.putExtra(LoginActivity.EXTRA_PACKAGE_NAME, mCallingPackage);
 		startActivityForResult(intent, REQUEST_LOGIN);
+
+		Log.i(TAG, "showLoginActivity");
 	}
 
 	@Override
@@ -159,11 +172,18 @@ implements ListFragment.OnListItemClickListener
 				}
 				break;
 		}
+
+		mLogBuilder.setLength(0);
+		Log.i(TAG, mLogBuilder
+			  .append("onActivityResult request = ")
+			  .append(request)
+			  .append(", result = ")
+			  .append(result)
+			  .toString());
 	}
 
 	private void initFragment()
 	{
-		Log.i(TAG, "initFragment");
 		addGroupListFragment();
 
 		if (mGroupId != -1)
@@ -175,6 +195,8 @@ implements ListFragment.OnListItemClickListener
 		{
 			replaceEntryDetailsFragment();
 		}
+
+		Log.i(TAG, "initFragment");
 	}
 
 	private void replaceEntryDetailsFragment()
@@ -189,6 +211,8 @@ implements ListFragment.OnListItemClickListener
 			.replace(R.id.fragment, f, TAG_ENTRY_DETAILS)
 			.addToBackStack(TAG_ENTRY_DETAILS)
 			.commit();
+
+		Log.i(TAG, "replaceEntryDetailsFragment");
 	}
 
 	private void replaceEntryListFragment()
@@ -203,20 +227,22 @@ implements ListFragment.OnListItemClickListener
 			.replace(R.id.fragment, f, TAG_ENTRY_LIST)
 			.addToBackStack(TAG_ENTRY_LIST)
 			.commit();
+
+		Log.i(TAG, "replaceEntryListFragment");
 	}
 
 	private void addGroupListFragment()
 	{
-		{
-			FragmentManager fm = getSupportFragmentManager();
-			ListFragment f = new ListFragment();
-			Bundle args = new Bundle();
-			args.putString(ListFragment.ARG_PACKAGE_NAME, mCallingPackage);
-			f.setArguments(args);
-			fm.beginTransaction()
-				.replace(R.id.fragment, f, TAG_GROUP_LIST)
-				.commit();
-		}
+		FragmentManager fm = getSupportFragmentManager();
+		ListFragment f = new ListFragment();
+		Bundle args = new Bundle();
+		args.putString(ListFragment.ARG_PACKAGE_NAME, mCallingPackage);
+		f.setArguments(args);
+		fm.beginTransaction()
+			.replace(R.id.fragment, f, TAG_GROUP_LIST)
+			.commit();
+
+		Log.i(TAG, "addGroupListFragment");
 	}
 
 	public void onListItemSelected(ListFragment f, ListFragment.ItemData data)
@@ -231,34 +257,42 @@ implements ListFragment.OnListItemClickListener
 			mEntryId = data.id;
 			replaceEntryDetailsFragment();
 		}
+		
+		mLogBuilder.setLength(0);
+		Log.i(TAG, mLogBuilder
+			.append("onListItemSelected tag = ")
+			.append(f.getTag())
+			.append(", id = ")
+			.append(data.id)
+			.toString());
 	}
 
 	public void onFieldSelected(EntryDetailFragment f, String value)
 	{
 		replace(value);
+		
+		Log.i(TAG, "onFieldSelected");
 	}
 
-	//戻るボタンを長押しでアプリ終了
+	// long press return button. finish app.
 	@Override
 	public boolean onKeyLongPress(int code, KeyEvent event)
 	{
 		if (event.getKeyCode() == KeyEvent.KEYCODE_BACK)
 		{
-			//アプリ終了
 			this.finish();
 		}
 		return super.onKeyLongPress(code, event);
 	}
 
-    /**
-     * 元の文字を置き換える
-     * @param result Replacing string
-     */
+    // send result string to calling package.
     private void replace(String result)
 	{
         Intent data = new Intent();
         data.putExtra(EXTRA_REPLACE_KEY, result);
         setResult(RESULT_OK, data);
         finish();
+		
+		Log.i(TAG, "replace");
     }
 }
