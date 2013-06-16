@@ -4,11 +4,11 @@ import android.app.*;
 import android.content.*;
 import android.content.pm.*;
 import android.os.*;
+import android.text.*;
+import android.view.*;
+import android.view.View.*;
 import android.widget.*;
 import org.tmatz.pocketmushroom.*;
-import android.view.View.*;
-import android.view.*;
-import javax.crypto.*;
 
 public class LoginActivity extends Activity
 {
@@ -119,7 +119,7 @@ public class LoginActivity extends Activity
 		}
 		catch (CryptoException e)
 		{
-			Toast.makeText(this, e.id, Toast.LENGTH_SHORT);
+			Toast.makeText(this, e.id, Toast.LENGTH_SHORT).show();
 		}
 	}
 }

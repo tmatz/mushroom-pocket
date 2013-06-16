@@ -166,6 +166,10 @@ public class MushroomActivity
 							initFragment();
 						}
 					}
+					else
+					{
+						finish();
+					}
 				}
 				break;
 		}
