@@ -130,12 +130,12 @@ public class MushroomActivity
 
 	private void showLoginActivity()
 	{
+		Log.i(TAG, "showLoginActivity");
+
 		Intent intent = new Intent();
 		intent.setAction(LoginActivity.ACTION_LOGIN);
 		intent.putExtra(LoginActivity.EXTRA_PACKAGE_NAME, mCallingPackage);
 		startActivityForResult(intent, REQUEST_LOGIN);
-
-		Log.i(TAG, "showLoginActivity");
 	}
 
 	@Override
