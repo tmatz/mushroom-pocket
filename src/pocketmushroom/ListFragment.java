@@ -78,8 +78,7 @@ public class ListFragment extends CustomFragment
 			R.layout.entry_list_item,
 			c,
 			new String[] {PocketDatabase.COL_TITLE},
-			new int[] {R.id.title},
-			0);
+			new int[] {R.id.title});
 		mListView.setAdapter(listAdapter);
 		listAdapter.setViewBinder(new DecryptViewBinder(mPocketLock));
 		mListView.invalidateViews();
@@ -93,8 +92,7 @@ public class ListFragment extends CustomFragment
 			R.layout.entry_list_item,
 			c,
 			new String[] {PocketDatabase.COL_TITLE},
-			new int[] {R.id.title},
-			0);
+			new int[] {R.id.title});
 		mListView.setAdapter(listAdapter);
 		listAdapter.setViewBinder(new DecryptViewBinder(mPocketLock));
 		mListView.invalidateViews();
@@ -102,9 +100,9 @@ public class ListFragment extends CustomFragment
 
 	private class CustomCursorAdapter extends SimpleCursorAdapter
 	{
-		public CustomCursorAdapter(Context context, int layout, Cursor c, String[] from, int[] to, int flags)
+		public CustomCursorAdapter(Context context, int layout, Cursor c, String[] from, int[] to)
 		{
-			super(context, layout, c, from, to, flags);
+			super(context, layout, c, from, to);
 		}
 
 		@Override

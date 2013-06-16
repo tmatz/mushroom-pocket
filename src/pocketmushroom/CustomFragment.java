@@ -1,11 +1,8 @@
 package pocketmushroom;
 
-import android.app.*;
-import android.os.*;
-import android.view.*;
-import android.widget.*;
-import org.tmatz.pocketmushroom.*;
 import android.content.*;
+import android.os.*;
+import android.support.v4.app.*;
 
 public class CustomFragment extends Fragment
 {
@@ -31,7 +28,7 @@ public class CustomFragment extends Fragment
 			return args;
 		}
 
-		Activity activity = getActivity();
+		FragmentActivity activity = getActivity();
 		if (activity instanceof OnGetArgumentsListener)
 		{
 			args = ((OnGetArgumentsListener) activity)
