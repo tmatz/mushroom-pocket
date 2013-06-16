@@ -9,12 +9,21 @@ import android.content.*;
 
 public class CustomFragment extends Fragment
 {
+	// Method will be invoked whcn fragment requires arguments.
+	// Activity implements this interface.
 	public interface OnGetArgumentsListener
 	{
-		Bundle getArguments(String tag);
+		Bundle getCustomArguments(CustomFragment f);
+	}
+	
+	// Method will be invoked when fragment is detached.
+	// Activity implements this interface.
+	public interface OnDetachListener
+	{
+		void onDetach(CustomFragment f);
 	}
 
-	public Bundle getArguments(String tag)
+	public Bundle getCustomArguments()
 	{
 		Bundle args = getArguments();
 		if (args != null)
@@ -25,7 +34,8 @@ public class CustomFragment extends Fragment
 		Activity activity = getActivity();
 		if (activity instanceof OnGetArgumentsListener)
 		{
-			args = ((OnGetArgumentsListener) activity).getArguments(tag);
+			args = ((OnGetArgumentsListener) activity)
+				.getCustomArguments(this);
 		}
 		if (args != null)
 		{
@@ -39,5 +49,16 @@ public class CustomFragment extends Fragment
 		}
 
 		return args;
+	}
+	
+	@Override
+	public void onDetach()
+	{
+		if (getActivity() instanceof OnDetachListener)
+		{
+			((OnDetachListener) getActivity())
+				.onDetach(this);
+		}
+		super.onDetach();
 	}
 }

@@ -5,21 +5,39 @@ import android.content.*;
 import android.database.*;
 import android.database.sqlite.*;
 import android.os.*;
+import android.util.*;
 import android.view.*;
 import android.widget.*;
 import org.tmatz.pocketmushroom.*;
 
 public class MushroomActivity extends Activity
+implements ListFragment.OnListItemClickListener
+, EntryDetailFragment.OnFieldSelectedListener
+, CustomFragment.OnDetachListener
 {
+
+	public void onDetach(CustomFragment f)
+	{
+		if (TAG_ENTRY_LIST.equals(f.getTag()))
+		{
+			mGroupId = -1;
+			mEntryId = -1;
+		}
+		else if (TAG_ENTRY_DETAILS.equals(f.getTag()))
+		{
+			mEntryId = -1;
+		}
+	}
+
     public static final String ACTION_INTERCEPT = "com.adamrocker.android.simeji.ACTION_INTERCEPT";
     public static final String EXTRA_REPLACE_KEY = "replace_key";
 	public static final String STATE_GROUP_ID = "group_id";
 	public static final String STATE_ENTRY_ID = "entry_id";
 	private static final int REQUEST_LOGIN = 1;
-	private static final String BACKSTACK_ENTRY_LIST = "backstack_entry_list";
-	private static final String BACKSTACK_ENTRY_DETAILS = "backstack_entry_details";
-	
-
+	private static final String TAG_GROUP_LIST = "tag_group_list";
+	private static final String TAG_ENTRY_LIST = "tag_entry_list";
+	private static final String TAG_ENTRY_DETAILS = "tag_entry_details";
+	private static final String TAG = "PocketMushroom";
 	private SQLiteDatabase mDatabase;
 	private int mGroupId = -1;
 	private int mEntryId = -1;
@@ -27,6 +45,7 @@ public class MushroomActivity extends Activity
 	private String mCallingPackage;
 	private int mBackStackEntryList;
 	private int mBackStackEntryDetails;
+	private final StringBuilder mLogBuilder = new StringBuilder();
 
 	private class DecryptViewBinder implements SimpleCursorAdapter.ViewBinder
 	{
@@ -49,8 +68,41 @@ public class MushroomActivity extends Activity
 	@Override
 	public void onSaveInstanceState(Bundle outState)
 	{
+		super.onSaveInstanceState(outState);
+
 		outState.putInt(STATE_GROUP_ID, mGroupId);
 		outState.putInt(STATE_ENTRY_ID, mEntryId);
+
+		mLogBuilder.setLength(0);
+		Log.i(TAG, mLogBuilder
+			  .append("onSaveInstanceState ")
+			  .append(mGroupId)
+			  .append(", ")
+			  .append(mEntryId)
+			  .toString());
+	}
+
+	private void restoreInstanceState(Bundle savedInstanceState)
+	{
+		if (savedInstanceState != null)
+		{
+			mGroupId = savedInstanceState.getInt(STATE_GROUP_ID, -1);
+			mEntryId = savedInstanceState.getInt(STATE_ENTRY_ID, -1);
+		}
+		else
+		{
+			SharedPreferences pref = getPreferences(MODE_PRIVATE);
+			mGroupId = pref.getInt(STATE_GROUP_ID, -1);
+			mEntryId = pref.getInt(STATE_ENTRY_ID, -1);
+		}
+
+		mLogBuilder.setLength(0);
+		Log.i(TAG, mLogBuilder
+			  .append("restoreInstanceState ")
+			  .append(mGroupId)
+			  .append(", ")
+			  .append(mEntryId)
+			  .toString());
 	}
 
     @Override
@@ -58,11 +110,7 @@ public class MushroomActivity extends Activity
 	{
         super.onCreate(savedInstanceState);
 
-		if (savedInstanceState != null)
-		{
-			mGroupId = savedInstanceState.getInt(STATE_GROUP_ID, -1);
-			mEntryId = savedInstanceState.getInt(STATE_ENTRY_ID, -1);
-		}
+		restoreInstanceState(savedInstanceState);
 
 		mCallingPackage = getCallingPackage();
 		Intent intent = getIntent();
@@ -95,6 +143,18 @@ public class MushroomActivity extends Activity
 			initFragment();
 		}
     }
+
+	@Override
+	public void onStop()
+	{
+		SharedPreferences pref = getPreferences(MODE_PRIVATE);
+		pref.edit()
+			.putInt(STATE_GROUP_ID, mGroupId)
+			.putInt(STATE_ENTRY_ID, mEntryId)
+			.commit();
+
+		super.onStop();
+	}
 
 	private void showLoginActivity()
 	{
@@ -129,46 +189,94 @@ public class MushroomActivity extends Activity
 				break;
 		}
 	}
-	
+
 	private void initFragment()
 	{
-		FragmentManager fm = getFragmentManager();
+		Log.i(TAG, "initFragment");
+		addGroupListFragment();
 
+		if (mGroupId != -1)
 		{
+			replaceEntryListFragment();
+		}
+
+		if (mEntryId != -1)
+		{
+			replaceEntryDetailsFragment();
+		}
+	}
+
+	private void replaceEntryDetailsFragment()
+	{
+		FragmentManager fm = getFragmentManager();
+		EntryDetailFragment f = new EntryDetailFragment();
+		Bundle args = new Bundle();
+		args.putString(EntryDetailFragment.ARG_PACKAGE_NAME, mCallingPackage);
+		args.putInt(EntryDetailFragment.ARG_ENTRY_ID, mEntryId);
+		f.setArguments(args);
+		mBackStackEntryDetails = fm.beginTransaction()
+			.replace(R.id.fragment, f, TAG_ENTRY_DETAILS)
+			.addToBackStack(TAG_ENTRY_DETAILS)
+			.commit();
+	}
+
+	private void replaceEntryListFragment()
+	{
+		FragmentManager fm = getFragmentManager();
+		ListFragment f = new ListFragment();
+		Bundle args = new Bundle();
+		args.putString(ListFragment.ARG_PACKAGE_NAME, mCallingPackage);
+		args.putInt(ListFragment.ARG_GROUP_ID, mGroupId);
+		f.setArguments(args);
+		mBackStackEntryList = fm.beginTransaction()
+			.replace(R.id.fragment, f, TAG_ENTRY_LIST)
+			.addToBackStack(TAG_ENTRY_LIST)
+			.commit();
+	}
+
+	private void addGroupListFragment()
+	{
+		{
+			FragmentManager fm = getFragmentManager();
 			ListFragment f = new ListFragment();
 			Bundle args = new Bundle();
 			args.putString(ListFragment.ARG_PACKAGE_NAME, mCallingPackage);
 			f.setArguments(args);
 			fm.beginTransaction()
-				.replace(R.id.fragment, f)
+				.replace(R.id.fragment, f, TAG_GROUP_LIST)
 				.commit();
 		}
+	}
 
-//		if (mGroupId != -1)
-//		{
-//			ListFragment f = new ListFragment();
-//			Bundle args = new Bundle();
-//			args.putString(ListFragment.ARG_PACKAGE_NAME, mCallingPackage);
-//			args.putInt(ListFragment.ARG_GROUP_ID, mGroupId);
-//			f.setArguments(args);
-//			mBackStackEntryList = fm.beginTransaction()
-//				.add(R.id.fragment, f)
-//				.addToBackStack(BACKSTACK_ENTRY_LIST)
-//				.commit();
-//		}
-//
-//		if (mEntryId != -1)
-//		{
-//			EntryDetailFragment f = new EntryDetailFragment();
-//			Bundle args = new Bundle();
-//			args.putString(EntryDetailFragment.ARG_PACKAGE_NAME, mCallingPackage);
-//			args.putInt(EntryDetailFragment.ARG_ENTRY_ID, mEntryId);
-//			f.setArguments(args);
-//			mBackStackEntryDetails = fm.beginTransaction()
-//				.add(R.id.fragment, f)
-//				.addToBackStack(BACKSTACK_ENTRY_DETAILS)
-//				.commit();
-//		}
+	public void onListItemSelected(ListFragment f, ListFragment.ItemData data)
+	{
+		if (TAG_GROUP_LIST.equals(f.getTag()))
+		{
+			mGroupId = data.id;
+			replaceEntryListFragment();
+		}
+		if (TAG_ENTRY_LIST.equals(f.getTag()))
+		{
+			mEntryId = data.id;
+			replaceEntryDetailsFragment();
+		}
+	}
+
+	public void onFieldSelected(EntryDetailFragment f, String value)
+	{
+		replace(value);
+	}
+
+	//戻るボタンを長押しでアプリ終了
+	@Override
+	public boolean onKeyLongPress(int code, KeyEvent event)
+	{
+		if (event.getKeyCode() == KeyEvent.KEYCODE_BACK)
+		{
+			//アプリ終了
+			this.finish();
+		}
+		return super.onKeyLongPress(code, event);
 	}
 
     /**

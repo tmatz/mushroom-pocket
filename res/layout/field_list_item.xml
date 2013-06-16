@@ -1,0 +1,15 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="horizontal">
+    <TextView android:id="@+id/title"
+		android:layout_width="0dip"
+		android:layout_height="wrap_content"
+		android:layout_weight="2"
+		android:hint="(title)"/>
+	<TextView android:id="@+id/value"
+		android:layout_width="0dip"
+		android:layout_height="wrap_content"
+		android:layout_weight="3"
+		android:hint="(value)"/>
+</LinearLayout>
