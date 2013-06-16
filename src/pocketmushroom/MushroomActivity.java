@@ -92,7 +92,7 @@ implements ListFragment.OnListItemClickListener
 
 		restoreInstanceState(savedInstanceState);
 
-		if (PocketDatabase.isReadable())
+		if (!PocketDatabase.isReadable())
 		{
 			Toast.makeText(this, R.string.cant_open_pocket, Toast.LENGTH_SHORT).show();
 			setResult(RESULT_CANCELED);
