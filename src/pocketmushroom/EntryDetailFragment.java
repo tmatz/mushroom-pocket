@@ -59,7 +59,7 @@ public class EntryDetailFragment extends CustomFragment
 		mListView.setOnItemClickListener(mOnItemClickListener);
 		mNotes = (TextView) v.findViewById(R.id.notes);
 		mNotes.setOnClickListener(mOnClickListener);
-		mPackageName = args.getString(ARG_PACKAGE_NAME, null);
+		mPackageName = args.getString(ARG_PACKAGE_NAME);
 		mEntryId = args.getInt(ARG_ENTRY_ID, -1);
 		if (mPackageName != null && mEntryId != -1)
 		{

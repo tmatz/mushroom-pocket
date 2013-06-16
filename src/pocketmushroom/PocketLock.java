@@ -31,12 +31,6 @@ public class PocketLock
 	private String mPackageName;
 	private SecretKey mSecretKey;
 
-	public boolean isUnlocked()
-	{
-		// TODO: Implement this method
-		return false;
-	}
-
 	public static synchronized PocketLock getPocketLock(String packageName)
 	{
 		if (sPocketLock != null && sPocketLock.mPackageName.equals(packageName))
@@ -84,7 +78,7 @@ public class PocketLock
 			throw new CryptoException(R.string.exception_file_can_not_read);
 		}
 	}
-	
+
 	public String getPackageName()
 	{
 		return mPackageName;

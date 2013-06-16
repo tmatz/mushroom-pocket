@@ -38,32 +38,12 @@ implements ListFragment.OnListItemClickListener
 	private static final String TAG_ENTRY_LIST = "tag_entry_list";
 	private static final String TAG_ENTRY_DETAILS = "tag_entry_details";
 	private static final String TAG = "PocketMushroom";
-	private SQLiteDatabase mDatabase;
+
 	private int mGroupId = -1;
 	private int mEntryId = -1;
 	private PocketLock mPocketLock;
 	private String mCallingPackage;
-	private int mBackStackEntryList;
-	private int mBackStackEntryDetails;
 	private final StringBuilder mLogBuilder = new StringBuilder();
-
-	private class DecryptViewBinder implements SimpleCursorAdapter.ViewBinder
-	{
-		public boolean setViewValue(View v, Cursor c, int column)
-		{
-			String value = c.getString(column);
-			try
-			{
-				String decrypted = mPocketLock.decrypt(value);
-				((TextView) v).setText(decrypted);
-				return true;
-			}
-			catch (Exception e)
-			{
-				return true;
-			}
-		}
-	}
 
 	@Override
 	public void onSaveInstanceState(Bundle outState)
@@ -112,17 +92,7 @@ implements ListFragment.OnListItemClickListener
 
 		restoreInstanceState(savedInstanceState);
 
-		mCallingPackage = getCallingPackage();
-		Intent intent = getIntent();
-		if (mCallingPackage == null || !intent.getAction().equals(ACTION_INTERCEPT))
-		{
-			// it is not a mushroom intent.
-			setContentView(R.layout.main_activity);
-			return;
-		}
-
-		mDatabase = PocketDatabase.openDatabase();
-		if (mDatabase == null)
+		if (PocketDatabase.isReadable())
 		{
 			Toast.makeText(this, R.string.cant_open_pocket, Toast.LENGTH_SHORT).show();
 			setResult(RESULT_CANCELED);
@@ -130,6 +100,7 @@ implements ListFragment.OnListItemClickListener
 			return;
 		}
 
+        mCallingPackage = getCallingPackage();
 		mPocketLock = PocketLock.getPocketLock(mCallingPackage);
 
 		setContentView(R.layout.mushroom_activity);
@@ -214,7 +185,7 @@ implements ListFragment.OnListItemClickListener
 		args.putString(EntryDetailFragment.ARG_PACKAGE_NAME, mCallingPackage);
 		args.putInt(EntryDetailFragment.ARG_ENTRY_ID, mEntryId);
 		f.setArguments(args);
-		mBackStackEntryDetails = fm.beginTransaction()
+		fm.beginTransaction()
 			.replace(R.id.fragment, f, TAG_ENTRY_DETAILS)
 			.addToBackStack(TAG_ENTRY_DETAILS)
 			.commit();
@@ -228,7 +199,7 @@ implements ListFragment.OnListItemClickListener
 		args.putString(ListFragment.ARG_PACKAGE_NAME, mCallingPackage);
 		args.putInt(ListFragment.ARG_GROUP_ID, mGroupId);
 		f.setArguments(args);
-		mBackStackEntryList = fm.beginTransaction()
+		fm.beginTransaction()
 			.replace(R.id.fragment, f, TAG_ENTRY_LIST)
 			.addToBackStack(TAG_ENTRY_LIST)
 			.commit();

@@ -20,16 +20,34 @@ public class PocketDatabase
 	public static final String COL_GROUPFIELD_ID = "groupfield_id";
 	public static final String COL_ICON = "icon";
 	public static final String COL_IS_HIDDEN = "is_hodden";
-	
+
 	private static SQLiteDatabase sDatabase;
-	
+
+    public static boolean isReadable()
+    {
+        if (!Utilities.isExternalStorageReadable())
+        {
+            return false;
+        }
+
+        File dbFile = new File(
+                Environment.getExternalStorageDirectory()
+                , PocketDatabase.DATABASE_NAME);
+        if (!dbFile.exists() || !dbFile.canRead())
+        {
+            return false;
+        }
+
+        return true;
+    }
+
 	public synchronized static SQLiteDatabase openDatabase()
 	{
 		if (sDatabase != null)
 		{
 			return sDatabase;
 		}
-		
+
 		if (Utilities.isExternalStorageReadable())
 		{
 			File dbFile = new File(
