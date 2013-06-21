@@ -25,6 +25,11 @@
 				<category android:name="android.intent.category.DEFAULT" />
 			</intent-filter>
 		</activity>
+		<receiver android:name="pocketmushroom.ScreenUnlockBroadcastReceiver">
+			<intent-filter>
+				<action android:name="android.intent.action.USER_PRESENT" />
+			</intent-filter>
+		</receiver>
 	</application>
 	<uses-sdk
 		android:minSdkVersion="8"
