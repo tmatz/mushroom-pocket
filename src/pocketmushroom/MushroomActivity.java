@@ -11,10 +11,10 @@ import android.widget.*;
 import org.tmatz.pocketmushroom.*;
 
 public class MushroomActivity
-	extends FragmentActivity
-	implements ListFragment.OnListItemClickListener
-	, EntryDetailFragment.OnFieldSelectedListener
-	, CustomFragment.OnDetachListener
+extends FragmentActivity
+implements ListFragment.OnListItemClickListener
+, EntryDetailFragment.OnFieldSelectedListener
+, CustomFragment.OnDetachListener
 {
 	public static final String ACTION_INTERCEPT = "com.adamrocker.android.simeji.ACTION_INTERCEPT";
 	public static final String EXTRA_REPLACE_KEY = "replace_key";
@@ -24,7 +24,7 @@ public class MushroomActivity
 	private static final String TAG_GROUP_LIST = "tag_group_list";
 	private static final String TAG_ENTRY_LIST = "tag_entry_list";
 	private static final String TAG_ENTRY_DETAILS = "tag_entry_details";
-	private static final String TAG = MushroomActivity.class.getSimpleName();
+	private static final String TAG = "MushroomActivity";
 
 	private int mGroupId = -1;
 	private int mEntryId = -1;
@@ -37,11 +37,11 @@ public class MushroomActivity
 	{
 		mLogBuilder.setLength(0);
 		Log.i(TAG, mLogBuilder
-			.append("onSaveInstanceState group = ")
-			.append(mGroupId)
-			.append(", entry = ")
-			.append(mEntryId)
-			.toString());
+			  .append("onSaveInstanceState group = ")
+			  .append(mGroupId)
+			  .append(", entry = ")
+			  .append(mEntryId)
+			  .toString());
 
 		super.onSaveInstanceState(outState);
 
@@ -53,10 +53,10 @@ public class MushroomActivity
 	{
 		mLogBuilder.setLength(0);
 		Log.i(TAG, mLogBuilder
-			.append("restoreInstanceState group = ")
-			.append(mGroupId)
-			.append(", entry = ")
-			.append(mEntryId).toString());
+			  .append("restoreInstanceState group = ")
+			  .append(mGroupId)
+			  .append(", entry = ")
+			  .append(mEntryId).toString());
 
 		if (savedInstanceState != null)
 		{
@@ -76,10 +76,10 @@ public class MushroomActivity
 	{
 		mLogBuilder.setLength(0);
 		Log.i(TAG, mLogBuilder
-			.append("onCreate")
-			.append((savedInstanceState != null)? "with state" : "")
-			.toString());
-		
+			  .append("onCreate")
+			  .append((savedInstanceState != null) ? "with state" : "")
+			  .toString());
+
 		super.onCreate(savedInstanceState);
 		restoreInstanceState(savedInstanceState);
 
@@ -112,20 +112,27 @@ public class MushroomActivity
 		{
 			initFragment();
 		}
-   	 }
+	}
+	
+	@Override
+	public void onResume()
+	{
+		Log.i(TAG, "onResume");
 
+		super.onResume();
+	}
+	
 	@Override
 	public void onPause()
 	{
 		Log.i(TAG, "onPause");
 
+		super.onPause();
 		SharedPreferences pref = getPreferences(MODE_PRIVATE);
 		pref.edit()
 			.putInt(STATE_GROUP_ID, mGroupId)
 			.putInt(STATE_ENTRY_ID, mEntryId)
 			.commit();
-
-		super.onPause();
 	}
 
 	private void showLoginActivity()
@@ -240,9 +247,9 @@ public class MushroomActivity
 	{
 		mLogBuilder.setLength(0);
 		Log.i(TAG, mLogBuilder
-			.append("onDetachFragment tag = ")
-			.append(f.getTag())
-			.toString());
+			  .append("onDetachFragment tag = ")
+			  .append(f.getTag())
+			  .toString());
 
 		if (TAG_ENTRY_LIST.equals(f.getTag()))
 		{
@@ -259,11 +266,11 @@ public class MushroomActivity
 	{
 		mLogBuilder.setLength(0);
 		Log.i(TAG, mLogBuilder
-			.append("onListItemSelected tag = ")
-			.append(f.getTag())
-			.append(", id = ")
-			.append(data.id)
-			.toString());
+			  .append("onListItemSelected tag = ")
+			  .append(f.getTag())
+			  .append(", id = ")
+			  .append(data.id)
+			  .toString());
 
 		if (TAG_GROUP_LIST.equals(f.getTag()))
 		{
