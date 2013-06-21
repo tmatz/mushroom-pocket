@@ -120,6 +120,7 @@ implements ListFragment.OnListItemClickListener
 		Log.i(TAG, "onResume");
 
 		super.onResume();
+		PocketLock.resetTimer();
 	}
 	
 	@Override
@@ -133,6 +134,8 @@ implements ListFragment.OnListItemClickListener
 			.putInt(STATE_GROUP_ID, mGroupId)
 			.putInt(STATE_ENTRY_ID, mEntryId)
 			.commit();
+
+		PocketLock.startTimer();
 	}
 
 	private void showLoginActivity()

@@ -1,15 +1,17 @@
 package pocketmushroom;
 
 import android.os.*;
+import android.util.*;
 import java.io.*;
 import java.security.*;
+import java.util.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
 import org.tmatz.pocketmushroom.*;
-import java.security.spec.*;
 
 public class PocketLock
 {
+	private static final String TAG = "PocketLock";
     private static final String PROVIDER = "BC";
     private static final int SALT_LENGTH = 20;
     private static final int IV_LENGTH = 16;
@@ -20,9 +22,11 @@ public class PocketLock
     private static final String CIPHER_ALGORITHM = "AES/CBC/PKCS5Padding";
     private static final String SECRET_KEY_ALGORITHM = "AES";
 	private static final String HASHFILE_NAME = "hash.txt";
+	private static final int EXPIRE_DELAY = 300 * 1000;
 
 	private static PocketLock sPocketLock;
-
+	private static long sExpireTime;
+	
 	private String mPasswordHash;
 	private String mVersion;
 	private String mEncryptionMethod;
@@ -31,8 +35,31 @@ public class PocketLock
 	private String mPackageName;
 	private SecretKey mSecretKey;
 
+	public static synchronized void resetTimer()
+	{
+		Log.i(TAG, "resetTimer");
+		sExpireTime = 0;
+	}
+
+	public static synchronized void startTimer()
+	{
+		Log.i(TAG, "startTimer");
+		sExpireTime = System.currentTimeMillis() + EXPIRE_DELAY;
+	}
+	
+	private static void expire()
+	{
+		Log.i(TAG, "expire");
+		setPocketLock(null);
+	}
+
 	public static synchronized PocketLock getPocketLock(String packageName)
 	{
+		if (sExpireTime != 0 && System.currentTimeMillis() > sExpireTime)
+		{
+			expire();
+			return null;
+		}
 		if (sPocketLock != null && sPocketLock.mPackageName.equals(packageName))
 		{
 			return sPocketLock;
