@@ -115,17 +115,17 @@ public class MushroomActivity
    	 }
 
 	@Override
-	public void onStop()
+	public void onPause()
 	{
-		Log.i(TAG, "onStop");
+		Log.i(TAG, "onPause");
 
 		SharedPreferences pref = getPreferences(MODE_PRIVATE);
 		pref.edit()
 			.putInt(STATE_GROUP_ID, mGroupId)
 			.putInt(STATE_ENTRY_ID, mEntryId)
 			.commit();
-			
-		super.onStop();
+
+		super.onPause();
 	}
 
 	private void showLoginActivity()
@@ -236,11 +236,11 @@ public class MushroomActivity
 			.commit();
 	}
 
-	public void onDetach(CustomFragment f)
+	public void onDetachFragment(CustomFragment f)
 	{
 		mLogBuilder.setLength(0);
 		Log.i(TAG, mLogBuilder
-			.append("onDetach tag = ")
+			.append("onDetachFragment tag = ")
 			.append(f.getTag())
 			.toString());
 

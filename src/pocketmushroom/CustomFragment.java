@@ -17,7 +17,7 @@ public class CustomFragment extends Fragment
 	// Activity implements this interface.
 	public interface OnDetachListener
 	{
-		void onDetach(CustomFragment f);
+		void onDetachFragment(CustomFragment f);
 	}
 
 	public Bundle getCustomArguments()
@@ -54,7 +54,7 @@ public class CustomFragment extends Fragment
 		if (getActivity() instanceof OnDetachListener)
 		{
 			((OnDetachListener) getActivity())
-				.onDetach(this);
+				.onDetachFragment(this);
 		}
 		super.onDetach();
 	}
