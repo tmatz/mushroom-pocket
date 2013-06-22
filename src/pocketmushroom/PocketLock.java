@@ -25,6 +25,7 @@ public class PocketLock
 	private static final int EXPIRE_DELAY = 300 * 1000;
 
 	private static PocketLock sPocketLock;
+	private static boolean sExpireTimeEnable = false;
 	private static long sExpireTime;
 	
 	private String mPasswordHash;
@@ -55,7 +56,7 @@ public class PocketLock
 
 	public static synchronized PocketLock getPocketLock(String packageName)
 	{
-		if (sExpireTime != 0 && System.currentTimeMillis() > sExpireTime)
+		if (sExpireTimeEnable && sExpireTime != 0 && System.currentTimeMillis() > sExpireTime)
 		{
 			expire();
 			return null;
