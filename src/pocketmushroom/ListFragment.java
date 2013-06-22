@@ -73,28 +73,28 @@ public class ListFragment extends CustomFragment
 	private void showGroupList()
 	{
 		Cursor c = mDatabase.rawQuery("select _id, title from groups", null);
+		FilterCursor sc = new FilterCursor(c, "title", "title", new DecryptColumnTransformer(mPocketLock));
 		SimpleCursorAdapter listAdapter = new CustomCursorAdapter(
 			getActivity(),
 			R.layout.entry_list_item,
-			c,
+			sc,
 			new String[] {PocketDatabase.COL_TITLE},
 			new int[] {R.id.title});
 		mListView.setAdapter(listAdapter);
-		listAdapter.setViewBinder(new DecryptViewBinder(mPocketLock));
 		mListView.invalidateViews();
 	}
 
 	private void showEntryList(int groupId)
 	{
 		Cursor c = mDatabase.rawQuery("select _id, title from entries where group_id = " + groupId, null);
+		FilterCursor sc = new FilterCursor(c, "title", "title", new DecryptColumnTransformer(mPocketLock));
 		SimpleCursorAdapter listAdapter = new CustomCursorAdapter(
 			getActivity(),
 			R.layout.entry_list_item,
-			c,
+			sc,
 			new String[] {PocketDatabase.COL_TITLE},
 			new int[] {R.id.title});
 		mListView.setAdapter(listAdapter);
-		listAdapter.setViewBinder(new DecryptViewBinder(mPocketLock));
 		mListView.invalidateViews();
 	}
 

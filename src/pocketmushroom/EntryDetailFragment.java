@@ -83,14 +83,14 @@ public class EntryDetailFragment extends CustomFragment
 	private void showFieldList()
 	{
 		Cursor c = mDatabase.rawQuery("select _id, title, value, is_hidden from fields where entry_id = " + mEntryId, null);
+		FilterCursor sc = new FilterCursor(c, "title", "value", new DecryptColumnTransformer(mPocketLock));
 		SimpleCursorAdapter listAdapter = new CustomCursorAdapter(
 			getActivity(),
 			R.layout.field_list_item,
-			c,
+			sc,
 			new String[] {PocketDatabase.COL_TITLE, PocketDatabase.COL_VALUE},
 			new int[] {R.id.title, R.id.value});
 		mListView.setAdapter(listAdapter);
-		listAdapter.setViewBinder(new DecryptViewBinder(mPocketLock));
 		mListView.invalidateViews();
 	}
 
