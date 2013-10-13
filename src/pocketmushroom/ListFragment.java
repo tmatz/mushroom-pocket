@@ -1,12 +1,10 @@
 package pocketmushroom;
 
-import android.app.*;
 import android.content.*;
 import android.database.*;
 import android.database.sqlite.*;
 import android.os.*;
 import android.view.*;
-import android.view.View.*;
 import android.widget.*;
 import android.widget.AdapterView.OnItemClickListener;
 import org.tmatz.pocketmushroom.*;
@@ -73,7 +71,7 @@ public class ListFragment extends CustomFragment
 	private void showGroupList()
 	{
 		Cursor c = mDatabase.rawQuery("select _id, title from groups", null);
-		FilterCursor sc = new FilterCursor(c, "title", "title", new DecryptColumnTransformer(mPocketLock));
+		FilterCursor sc = new FilterCursor(c, "title", new DecryptColumnTransformer(mPocketLock));
 		SimpleCursorAdapter listAdapter = new CustomCursorAdapter(
 			getActivity(),
 			R.layout.entry_list_item,
@@ -87,7 +85,7 @@ public class ListFragment extends CustomFragment
 	private void showEntryList(int groupId)
 	{
 		Cursor c = mDatabase.rawQuery("select _id, title from entries where group_id = " + groupId, null);
-		FilterCursor sc = new FilterCursor(c, "title", "title", new DecryptColumnTransformer(mPocketLock));
+		FilterCursor sc = new FilterCursor(c, "title", new DecryptColumnTransformer(mPocketLock));
 		SimpleCursorAdapter listAdapter = new CustomCursorAdapter(
 			getActivity(),
 			R.layout.entry_list_item,

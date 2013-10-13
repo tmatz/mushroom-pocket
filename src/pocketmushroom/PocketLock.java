@@ -4,7 +4,6 @@ import android.os.*;
 import android.util.*;
 import java.io.*;
 import java.security.*;
-import java.util.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
 import org.tmatz.pocketmushroom.*;
@@ -29,7 +28,9 @@ public class PocketLock
 	private static long sExpireTime;
 	
 	private String mPasswordHash;
+	@SuppressWarnings("unused")
 	private String mVersion;
+	@SuppressWarnings("unused")
 	private String mEncryptionMethod;
 	private String mPasswordSalt;
 	private String mEncryptionSalt;
@@ -94,12 +95,19 @@ public class PocketLock
 		{
 			FileReader fr = new FileReader(hashFile);
 			BufferedReader br = new BufferedReader(fr);
-			mPasswordHash = br.readLine();
-			mVersion = br.readLine();
-			mEncryptionMethod = br.readLine();
-			mPasswordSalt = br.readLine();
-			mEncryptionSalt = br.readLine();
-			mPackageName = packageName;
+			try
+			{
+				mPasswordHash = br.readLine();
+				mVersion = br.readLine();
+				mEncryptionMethod = br.readLine();
+				mPasswordSalt = br.readLine();
+				mEncryptionSalt = br.readLine();
+				mPackageName = packageName;
+			}
+			finally
+			{
+				br.close();
+			}
 		}
 		catch (Exception e)
 		{

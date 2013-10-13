@@ -1,31 +1,34 @@
 package pocketmushroom;
 
 import android.database.*;
-import android.net.*;
 import android.os.*;
 import android.util.*;
-import java.security.*;
+
 import java.util.*;
 
 public class FilterCursor
 extends AbstractCursor
 {
-	private class PairComparator<T extends Comparable<T>>
-	implements Comparator
+	private class ValueIndexPair extends Pair<String, Integer>
 	{
-		@SuppressWarnings
-		public int compare(Object p1, Object p2)
+		public ValueIndexPair(String first, Integer second) {
+			super(first, second);
+		}
+	}
+
+	private class PairComparator<T extends Comparable<T>>
+	implements Comparator<Pair<T, ?>>
+	{
+		@Override
+		public int compare(Pair<T, ?> lhs, Pair<T, ?> rhs)
 		{
-			Pair<T, ?> v1 = (Pair<T, ?>) p1;
-			Pair<T, ?> v2 = (Pair<T, ?>) p2;
-			return v1.first.compareTo(v2.first);
+			return lhs.first.compareTo(rhs.first);
 		}
 	}
 
 	private Cursor mCursor;
 	private int[] mSortedOrder;
 	private int mSortColumn;
-	private int mValueColumn;
 	private ColumnTransformer mColumnTransformer;
 
 	private DataSetObserver mDataSetObserver = new DataSetObserver()
@@ -45,12 +48,11 @@ extends AbstractCursor
 		}
 	};
 
-	public FilterCursor(Cursor c, String sort, String value, ColumnTransformer trans)
+	public FilterCursor(Cursor c, String sort, ColumnTransformer trans)
 	{
 		mCursor = c;
 		mSortedOrder = null;
 		mSortColumn = c.getColumnIndexOrThrow(sort);
-		mValueColumn = c.getColumnIndexOrThrow(value);
 		if (trans != null)
 		{
 			mColumnTransformer = trans;
@@ -61,7 +63,7 @@ extends AbstractCursor
 		}
 		c.registerDataSetObserver(mDataSetObserver);
 	}
-
+	
 	private void sort()
 	{
 		int count = mCursor.getCount();
@@ -71,53 +73,17 @@ extends AbstractCursor
 			return;
 		}
 
-		Object[] values = new Object[count];
+		ValueIndexPair[] values = new ValueIndexPair[count];
 		int numValues = 0;
 		mCursor.moveToFirst();
-		switch (mCursor.getType(mSortColumn))
+
+		for (int i = 0; i < values.length; ++i)
 		{
-			case mCursor.FIELD_TYPE_FLOAT:
-				{
-					for (int i = 0; i < values.length; ++i)
-					{
-						if (!mColumnTransformer.getString(mCursor, mValueColumn).isEmpty())
-						{
-							values[numValues++] = new Pair<Float, Integer>(mCursor.getFloat(mSortColumn), i);
-						}
-						mCursor.moveToNext();
-					}
-					Arrays.sort(values, 0, numValues, new PairComparator<Float>());
-				}
-				break;
-			case mCursor.FIELD_TYPE_INTEGER:
-				{
-					for (int i = 0; i < values.length; ++i)
-					{
-						if (!mColumnTransformer.getString(mCursor, mValueColumn).isEmpty())
-						{
-							values[numValues++] = new Pair<Integer, Integer>(mCursor.getInt(mSortColumn), i);
-						}
-						mCursor.moveToNext();
-					}
-					Arrays.sort(values, 0, numValues, new PairComparator<Integer>());
-				}
-				break;
-			case mCursor.FIELD_TYPE_STRING:
-				{
-					for (int i = 0; i < values.length; ++i)
-					{
-						if (!mColumnTransformer.getString(mCursor, mValueColumn).isEmpty())
-						{
-							values[numValues++] = new Pair<String, Integer>(mColumnTransformer.getString(mCursor, mSortColumn), i);
-						}
-						mCursor.moveToNext();
-					}
-					Arrays.sort(values, 0, numValues, new PairComparator<String>());
-				}
-				break;
-			default:
-				throw new InvalidParameterException("unexpected column type.");
+			String value = mColumnTransformer.getString(mCursor, mSortColumn);
+			values[numValues++] = new ValueIndexPair(value, i);
+			mCursor.moveToNext();
 		}
+		Arrays.sort(values, 0, numValues, new PairComparator<String>());
 
 		mSortedOrder = new int[numValues];
 		for (int i = 0; i < numValues; ++i)
@@ -221,11 +187,6 @@ extends AbstractCursor
 	public void copyStringToBuffer(int p1, CharArrayBuffer p2)
 	{
 		mCursor.copyStringToBuffer(p1, p2);
-	}
-
-	public int getType(int p1)
-	{
-		return mCursor.getType(p1);
 	}
 
 	public void deactivate()

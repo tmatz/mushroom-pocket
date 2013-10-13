@@ -4,7 +4,6 @@ import android.app.*;
 import android.content.*;
 import android.content.pm.*;
 import android.os.*;
-import android.text.*;
 import android.view.*;
 import android.view.View.*;
 import android.widget.*;
@@ -62,8 +61,8 @@ public class LoginActivity extends Activity
 			{
 				public boolean onKey(View v, int keyCode, KeyEvent event)
 				{
-					if (event.getAction() == event.ACTION_DOWN &&
-						keyCode == event.KEYCODE_ENTER)
+					if (event.getAction() == KeyEvent.ACTION_DOWN &&
+						keyCode == KeyEvent.KEYCODE_ENTER)
 					{
 						CheckPassword();
 						return true;

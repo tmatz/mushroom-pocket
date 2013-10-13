@@ -83,7 +83,7 @@ public class EntryDetailFragment extends CustomFragment
 	private void showFieldList()
 	{
 		Cursor c = mDatabase.rawQuery("select _id, title, value, is_hidden from fields where entry_id = " + mEntryId, null);
-		FilterCursor sc = new FilterCursor(c, "title", "value", new DecryptColumnTransformer(mPocketLock));
+		FilterCursor sc = new FilterCursor(c, "title", new DecryptColumnTransformer(mPocketLock));
 		SimpleCursorAdapter listAdapter = new CustomCursorAdapter(
 			getActivity(),
 			R.layout.field_list_item,

@@ -1,8 +1,6 @@
 package pocketmushroom;
 
 import android.content.*;
-import android.database.*;
-import android.database.sqlite.*;
 import android.os.*;
 import android.support.v4.app.*;
 import android.util.*;
