@@ -9,7 +9,6 @@
 	<string name="exception_wrong_password">Wrong password</string>
 	<string name="exception_encryption_failed">Encryption failed</string>
 	<string name="exception_decryption_failed">Decryption failed</string>
-	<string name="hint_notes">(notes)</string>
 	<string name="hint_package_name">(package name)</string>
 	<string name="hint_password">(password)</string>
 	<string name="hint_title">(title)</string>
