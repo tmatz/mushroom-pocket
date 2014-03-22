@@ -1,48 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
 	android:orientation="vertical"
+	android:windowSoftInputMode="stateVisible"
 	android:layout_width="fill_parent"
 	android:layout_height="fill_parent">
-    <TextView android:text="@string/package_name"
+
+	<TextView
+		android:text="@string/package_name"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"/>
+
 	<LinearLayout
 		android:orientation="horizontal"
 		android:layout_width="fill_parent"
 		android:layout_height="wrap_content">
+
 		<ImageView
 			android:id="@+id/applicatio_icon"
 			android:layout_width="64dp"
-			android:layout_height="64dp" />
+			android:layout_height="64dp"/>
+
 		<TextView
 			android:id="@+id/application_label"
 			android:layout_width="0dp"
 			android:layout_height="wrap_content"
-            android:layout_weight="1"
+			android:layout_weight="1"
 			android:hint="@string/hint_package_name"/>
+
 	</LinearLayout>
-    <TextView android:text="@string/password"
+
+	<TextView
+		android:text="@string/password"
 		android:layout_width="fill_parent"
 		android:layout_height="wrap_content"/>
-	<EditText android:id="@+id/password_text"
+
+	<EditText
+		android:id="@+id/password_text"
 		android:password="true"
 		android:inputType="textPassword"
 		android:layout_width="fill_parent"
 		android:layout_height="wrap_content"
 		android:hint="@string/hint_password"/>
+
 	<LinearLayout
 		android:orientation="horizontal"
 		android:layout_width="fill_parent"
 		android:layout_height="fill_parent">
-		<Button android:id="@+id/ok_btn"
+
+		<Button
+			android:id="@+id/ok_btn"
 			android:layout_width="0dp"
 			android:layout_height="wrap_content"
 			android:layout_weight="1"
-			android:text="@string/ok" />
-		<Button android:id="@+id/cancel_btn"
+			android:text="@android:string/ok"/>
+
+		<Button
+			android:id="@+id/cancel_btn"
 			android:layout_width="0dp"
 			android:layout_height="wrap_content"
 			android:layout_weight="1"
-			android:text="@string/cancel" />
+			android:text="@android:string/cancel"/>
+
 	</LinearLayout>
+
 </LinearLayout>
+

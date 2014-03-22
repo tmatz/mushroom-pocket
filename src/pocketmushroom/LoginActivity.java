@@ -61,10 +61,12 @@ public class LoginActivity extends Activity
 			{
 				public boolean onKey(View v, int keyCode, KeyEvent event)
 				{
-					if (event.getAction() == KeyEvent.ACTION_DOWN &&
-						keyCode == KeyEvent.KEYCODE_ENTER)
+					if (keyCode == KeyEvent.KEYCODE_ENTER)
 					{
-						CheckPassword();
+						if (event.getAction() == KeyEvent.ACTION_DOWN)
+						{
+							CheckPassword();
+						}
 						return true;
 					}
 					return false;
