@@ -4,7 +4,8 @@
 	android:orientation="vertical"
 	android:windowSoftInputMode="stateVisible"
 	android:layout_width="fill_parent"
-	android:layout_height="fill_parent">
+	android:layout_height="fill_parent"
+	android:padding="10dp">
 
 	<TextView
 		android:text="@string/package_name"
@@ -35,18 +36,34 @@
 		android:layout_width="fill_parent"
 		android:layout_height="wrap_content"/>
 
-	<EditText
-		android:id="@+id/password_text"
-		android:password="true"
-		android:inputType="textPassword"
-		android:layout_width="fill_parent"
+	<LinearLayout
 		android:layout_height="wrap_content"
-		android:hint="@string/hint_password"/>
+		android:layout_width="match_parent"
+		android:orientation="horizontal"
+		android:gravity="center">
+
+		<EditText
+			android:id="@+id/password_text"
+			android:password="true"
+			android:inputType="textPassword"
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:hint="@string/hint_password"
+			android:layout_weight="1.0"/>
+
+		<ImageButton
+			android:layout_height="wrap_content"
+			style="?android:attr/buttonBarButtonStyle"
+			android:layout_width="wrap_content"
+			android:src="@android:drawable/ic_menu_close_clear_cancel"
+			android:id="@+id/search_cancel"/>
+
+	</LinearLayout>
 
 	<LinearLayout
 		android:orientation="horizontal"
 		android:layout_width="fill_parent"
-		android:layout_height="fill_parent">
+		android:layout_height="wrap_content">
 
 		<Button
 			android:id="@+id/ok_btn"

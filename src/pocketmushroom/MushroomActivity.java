@@ -7,6 +7,7 @@ import android.util.*;
 import android.view.*;
 import android.widget.*;
 import org.tmatz.pocketmushroom.*;
+import android.widget.LinearLayout.LayoutParams;
 
 public class MushroomActivity
 extends FragmentActivity
@@ -101,7 +102,8 @@ implements ListFragment.OnListItemClickListener
 
 		mPocketLock = PocketLock.getPocketLock(mCallingPackage);
 		setContentView(R.layout.mushroom_activity);
-
+		getWindow().setLayout(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
+		
 		if (mPocketLock == null)
 		{
 			showLoginActivity();

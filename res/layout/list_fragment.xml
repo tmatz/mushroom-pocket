@@ -1,8 +1,47 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:orientation="vertical">
-    <ListView android:id="@+id/list_view"
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	android:orientation="vertical">
+
+	<LinearLayout
+		android:layout_height="wrap_content"
+		android:layout_width="match_parent"
+		android:orientation="horizontal"
+		android:gravity="center_vertical"
+		android:id="@+id/search_layout">
+
+		<ImageView
+			android:layout_height="wrap_content"
+			style="?android:attr/buttonBarButtonStyle"
+			android:layout_width="wrap_content"
+			android:tint="?android:attr/colorBackground"
+			android:src="@android:drawable/ic_menu_search"/>
+
+		<EditText
+			android:layout_height="wrap_content"
+			android:ems="10"
+			android:layout_width="wrap_content"
+			android:layout_weight="1.0"
+			android:hint="@string/hint_search"
+			android:id="@+id/search"
+			android:inputType="text|textNoSuggestions"/>
+
+		<ImageButton
+			android:layout_height="wrap_content"
+			android:layout_width="wrap_content"
+			android:src="@android:drawable/ic_input_delete"
+			android:id="@+id/search_cancel"
+			android:tint="?android:attr/colorBackground"
+			style="?android:attr/buttonBarButtonStyle"/>
+
+	</LinearLayout>
+
+	<ListView
+		android:id="@+id/list_view"
 		android:layout_width="fill_parent"
 		android:layout_height="wrap_content"/>
+
 </LinearLayout>
+

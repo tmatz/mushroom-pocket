@@ -1,13 +1,23 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:orientation="vertical">
-    <TextView android:id="@+id/title"
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	android:orientation="vertical"
+	android:padding="10dp">
+
+	<TextView
+		android:id="@+id/title"
 		android:layout_width="fill_parent"
 		android:layout_height="wrap_content"
-		android:hint="@string/hint_title"/>
-	<ListView android:id="@+id/field_list"
+		android:hint="@string/hint_title"
+		android:textAppearance="?android:attr/textAppearanceMedium"/>
+
+	<ListView
+		android:id="@+id/field_list"
 		android:layout_width="fill_parent"
 		android:layout_height="0dp"
 		android:layout_weight="1"/>
+
 </LinearLayout>
+

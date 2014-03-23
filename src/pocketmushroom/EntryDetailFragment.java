@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.text.method.HideReturnsTransformationMethod;
 import android.text.method.PasswordTransformationMethod;
 import android.text.method.TransformationMethod;
@@ -60,7 +61,7 @@ public class EntryDetailFragment extends CustomFragment
 	{
 		public void onItemClick(AdapterView<?> parent, View view, int position, long id)
 		{
-			TextView value = (TextView) view.findViewById(R.id.value);
+			TextView value = (TextView) view.findViewById(android.R.id.text2);
 			onFieldClick(value.getText().toString());
 		}
 	};
@@ -106,8 +107,7 @@ public class EntryDetailFragment extends CustomFragment
 				data.value = mPocketLock.decrypt(c.getString(2));
 				data.hide = c.getInt(3);
 
-				if (data.value != null && !data.value.isEmpty())
-
+				if (!TextUtils.isEmpty(data.value))
 				{
 					rowDatas.add(data);
 				}
@@ -133,7 +133,7 @@ public class EntryDetailFragment extends CustomFragment
 				data.value = mPocketLock.decrypt(c.getString(1));
 				data.hide = 0;
 
-				if (data.value != null && !data.value.isEmpty())
+				if (!TextUtils.isEmpty(data.value))
 				{
 					rowDatas.add(data);
 				}
@@ -159,7 +159,7 @@ public class EntryDetailFragment extends CustomFragment
 			R.layout.field_list_item,
 			cursor,
 			new String[] {PocketDatabase.COL_TITLE, PocketDatabase.COL_VALUE},
-			new int[] {R.id.title, R.id.value});
+			new int[] {android.R.id.text1, android.R.id.text2});
 		mListView.setAdapter(listAdapter);
 		mListView.invalidateViews();
 	}
@@ -178,7 +178,7 @@ public class EntryDetailFragment extends CustomFragment
 		public void bindView(View view, Context context, Cursor cursor)
 		{
 			super.bindView(view, context, cursor);
-			TextView value = (TextView) view.findViewById(R.id.value);
+			TextView value = (TextView) view.findViewById(android.R.id.text2);
 			if (cursor.getInt(mColHidden) == 0)
 			{
 				value.setTransformationMethod(mNormalTransformationMethod);

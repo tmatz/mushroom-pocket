@@ -13,6 +13,7 @@
 	<string name="hint_password">(password)</string>
 	<string name="hint_title">(title)</string>
 	<string name="hint_value">(value)</string>
+	<string name="hint_search">search string</string>
 	<string name="package_name">Login request from:</string>
 	<string name="password">Password:</string>
 	<string name="notes">Notes</string>

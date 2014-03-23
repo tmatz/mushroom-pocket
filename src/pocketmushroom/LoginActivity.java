@@ -8,6 +8,11 @@ import android.view.*;
 import android.view.View.*;
 import android.widget.*;
 import org.tmatz.pocketmushroom.*;
+import android.text.TextWatcher;
+import android.text.Editable;
+import android.text.TextUtils;
+import android.text.Layout;
+import android.widget.RadioGroup.LayoutParams;
 
 public class LoginActivity extends Activity
 {
@@ -18,6 +23,7 @@ public class LoginActivity extends Activity
 	
 	private PocketLock mPocketLock;
 	private EditText mPasswordEdit;
+	private ImageButton mClearButton;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState)
@@ -42,9 +48,12 @@ public class LoginActivity extends Activity
 		}
 
 		setContentView(R.layout.login_activity);
+		getWindow().setLayout(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
+
 		final ImageView appIconView = (ImageView) findViewById(R.id.applicatio_icon);
 		final TextView appLabelView = (TextView) findViewById(R.id.application_label);
 		mPasswordEdit = (EditText) findViewById(R.id.password_text);
+		mClearButton = (ImageButton) findViewById(R.id.search_cancel);
 		final Button okButton = (Button) findViewById(R.id.ok_btn);
 		final Button cancelButton = (Button) findViewById(R.id.cancel_btn);
 		PackageManager pm = getPackageManager();
@@ -70,6 +79,42 @@ public class LoginActivity extends Activity
 						return true;
 					}
 					return false;
+				}
+			});
+			
+		mPasswordEdit.addTextChangedListener(new TextWatcher()
+			{
+				@Override
+				public void beforeTextChanged(CharSequence p1, int p2, int p3, int p4)
+				{
+				}
+
+				@Override
+				public void onTextChanged(CharSequence p1, int p2, int p3, int p4)
+				{
+				}
+
+				@Override
+				public void afterTextChanged(Editable p1)
+				{
+					if (TextUtils.isEmpty(p1))
+					{
+						mClearButton.setVisibility(View.GONE);
+					}
+					else
+					{
+						mClearButton.setVisibility(View.VISIBLE);
+					}
+				}
+			});
+			
+		mClearButton.setOnClickListener(new OnClickListener()
+			{
+				@Override
+				public void onClick(View p1)
+				{
+					mPasswordEdit.setText("");
+					mClearButton.setVisibility(View.GONE);
 				}
 			});
 
