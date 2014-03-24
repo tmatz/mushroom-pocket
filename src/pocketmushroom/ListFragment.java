@@ -45,8 +45,8 @@ public class ListFragment extends CustomFragment
 	private String mPackageName;
 	private PocketLock mPocketLock;
 	private SQLiteDatabase mDatabase;
-	private EditText mSearch;
-	private ImageButton mSearchCancel;
+	private EditText mSearchText;
+	private ImageButton mClearButton;
 	private ListView mListView;
 
 	private final OnItemClickListener mOnItemClickListener = new OnItemClickListener()
@@ -56,7 +56,7 @@ public class ListFragment extends CustomFragment
 		{
 			InputMethodManager imm = (InputMethodManager)
                 getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-			imm.hideSoftInputFromWindow(mSearch.getWindowToken(), 0);
+			imm.hideSoftInputFromWindow(mSearchText.getWindowToken(), 0);
 			
 			if (getActivity() instanceof OnListItemClickListener)
 			{
@@ -91,7 +91,7 @@ public class ListFragment extends CustomFragment
 		@Override
 		public void onClick(View p1)
 		{
-			mSearch.setText("");
+			mSearchText.setText("");
 			setFilterText();
 		}
 	};
@@ -107,13 +107,13 @@ public class ListFragment extends CustomFragment
 		mDatabase = PocketDatabase.openDatabase();
 		mPocketLock = PocketLock.getPocketLock(mPackageName);
 		View view = inflater.inflate(R.layout.list_fragment, container, false);
-		mSearch = (EditText) view.findViewById(R.id.search);
-		mSearchCancel = (ImageButton) view.findViewById(R.id.search_cancel);
+		mSearchText = (EditText) view.findViewById(R.id.search);
+		mClearButton = (ImageButton) view.findViewById(R.id.search_cancel);
 		mListView = (ListView) view.findViewById(R.id.list_view);
 		mListView.setOnItemClickListener(mOnItemClickListener);	
 		mListView.setTextFilterEnabled(true);
-		mSearch.addTextChangedListener(mSearchTextChangedListener);
-		mSearchCancel.setOnClickListener(mSearchCancelClickListener);
+		mSearchText.addTextChangedListener(mSearchTextChangedListener);
+		mClearButton.setOnClickListener(mSearchCancelClickListener);
 		View searchLayout = view.findViewById(R.id.search_layout);
 
 		if (arguments.containsKey(ARG_GROUP_ID))
@@ -214,8 +214,7 @@ public class ListFragment extends CustomFragment
 
 	private void setFilterText()
 	{
-		String filter = mSearch.getText().toString();
-		mSearchCancel.setEnabled(!TextUtils.isEmpty(filter));
+		String filter = mSearchText.getText().toString();
 
 		SimpleCursorAdapter adapter = (SimpleCursorAdapter) mListView.getAdapter();
 		adapter.getFilter().filter(filter);

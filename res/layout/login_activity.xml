@@ -53,9 +53,8 @@
 
 		<ImageButton
 			android:layout_height="wrap_content"
-			style="?android:attr/buttonBarButtonStyle"
 			android:layout_width="wrap_content"
-			android:src="@android:drawable/ic_menu_close_clear_cancel"
+			style="@style/Theme.ClearButton"
 			android:id="@+id/search_cancel"/>
 
 	</LinearLayout>

@@ -15,7 +15,6 @@
 
 		<ImageView
 			android:layout_height="wrap_content"
-			style="?android:attr/buttonBarButtonStyle"
 			android:layout_width="wrap_content"
 			android:src="@android:drawable/ic_menu_search"/>
 
@@ -31,8 +30,7 @@
 		<ImageButton
 			android:layout_height="wrap_content"
 			android:layout_width="wrap_content"
-			android:src="@android:drawable/ic_input_delete"
-			android:background="@android:color/transparent"
+			style="@style/Theme.ClearButton"
 			android:id="@+id/search_cancel"/>
 
 	</LinearLayout>
@@ -43,4 +41,3 @@
 		android:layout_height="wrap_content"/>
 
 </LinearLayout>
-

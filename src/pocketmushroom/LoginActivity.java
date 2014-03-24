@@ -22,7 +22,7 @@ public class LoginActivity extends Activity
 	private static final Object sMutex = new Object();
 	
 	private PocketLock mPocketLock;
-	private EditText mPasswordEdit;
+	private EditText mPasswordText;
 	private ImageButton mClearButton;
 
 	@Override
@@ -52,7 +52,7 @@ public class LoginActivity extends Activity
 
 		final ImageView appIconView = (ImageView) findViewById(R.id.applicatio_icon);
 		final TextView appLabelView = (TextView) findViewById(R.id.application_label);
-		mPasswordEdit = (EditText) findViewById(R.id.password_text);
+		mPasswordText = (EditText) findViewById(R.id.password_text);
 		mClearButton = (ImageButton) findViewById(R.id.search_cancel);
 		final Button okButton = (Button) findViewById(R.id.ok_btn);
 		final Button cancelButton = (Button) findViewById(R.id.cancel_btn);
@@ -66,7 +66,7 @@ public class LoginActivity extends Activity
 		catch (PackageManager.NameNotFoundException e)
 		{}
 
-		mPasswordEdit.setOnKeyListener(new OnKeyListener()
+		mPasswordText.setOnKeyListener(new OnKeyListener()
 			{
 				public boolean onKey(View v, int keyCode, KeyEvent event)
 				{
@@ -81,33 +81,13 @@ public class LoginActivity extends Activity
 					return false;
 				}
 			});
-			
-		mPasswordEdit.addTextChangedListener(new TextWatcher()
-			{
-				@Override
-				public void beforeTextChanged(CharSequence p1, int p2, int p3, int p4)
-				{
-				}
 
-				@Override
-				public void onTextChanged(CharSequence p1, int p2, int p3, int p4)
-				{
-				}
-
-				@Override
-				public void afterTextChanged(Editable p1)
-				{
-					updateSearchCancelButtonVisibility();
-				}
-			});
-			
 		mClearButton.setOnClickListener(new OnClickListener()
 			{
 				@Override
 				public void onClick(View p1)
 				{
-					mPasswordEdit.setText("");
-					mClearButton.setVisibility(View.GONE);
+					mPasswordText.setText("");
 				}
 			});
 
@@ -127,8 +107,6 @@ public class LoginActivity extends Activity
 					finish();
 				}
 			});
-
-		updateSearchCancelButtonVisibility();
 	}
 
 	private boolean CreatePocketLock(String packageName)
@@ -150,7 +128,7 @@ public class LoginActivity extends Activity
 	
 	private void CheckPassword()
 	{
-		String password = mPasswordEdit.getText().toString();
+		String password = mPasswordText.getText().toString();
 		try
 		{
 			mPocketLock.unlock(password);
@@ -161,19 +139,6 @@ public class LoginActivity extends Activity
 		catch (CryptoException e)
 		{
 			Toast.makeText(this, e.id, Toast.LENGTH_SHORT).show();
-		}
-	}
-	
-	private void updateSearchCancelButtonVisibility()
-	{
-		CharSequence text = mPasswordEdit.getText();
-		if (TextUtils.isEmpty(text))
-		{
-			mClearButton.setVisibility(View.GONE);
-		}
-		else
-		{
-			mClearButton.setVisibility(View.VISIBLE);
 		}
 	}
 }
