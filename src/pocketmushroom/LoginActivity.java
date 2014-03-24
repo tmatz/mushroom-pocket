@@ -97,14 +97,7 @@ public class LoginActivity extends Activity
 				@Override
 				public void afterTextChanged(Editable p1)
 				{
-					if (TextUtils.isEmpty(p1))
-					{
-						mClearButton.setVisibility(View.GONE);
-					}
-					else
-					{
-						mClearButton.setVisibility(View.VISIBLE);
-					}
+					updateSearchCancelButtonVisibility();
 				}
 			});
 			
@@ -134,6 +127,8 @@ public class LoginActivity extends Activity
 					finish();
 				}
 			});
+
+		updateSearchCancelButtonVisibility();
 	}
 
 	private boolean CreatePocketLock(String packageName)
@@ -166,6 +161,19 @@ public class LoginActivity extends Activity
 		catch (CryptoException e)
 		{
 			Toast.makeText(this, e.id, Toast.LENGTH_SHORT).show();
+		}
+	}
+	
+	private void updateSearchCancelButtonVisibility()
+	{
+		CharSequence text = mPasswordEdit.getText();
+		if (TextUtils.isEmpty(text))
+		{
+			mClearButton.setVisibility(View.GONE);
+		}
+		else
+		{
+			mClearButton.setVisibility(View.VISIBLE);
 		}
 	}
 }
