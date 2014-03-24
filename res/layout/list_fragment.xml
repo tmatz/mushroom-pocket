@@ -3,7 +3,8 @@
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="fill_parent"
 	android:layout_height="fill_parent"
-	android:orientation="vertical">
+	android:orientation="vertical"
+	android:padding="10dp">
 
 	<LinearLayout
 		android:layout_height="wrap_content"
@@ -16,7 +17,6 @@
 			android:layout_height="wrap_content"
 			style="?android:attr/buttonBarButtonStyle"
 			android:layout_width="wrap_content"
-			android:tint="?android:attr/colorBackground"
 			android:src="@android:drawable/ic_menu_search"/>
 
 		<EditText
@@ -32,9 +32,8 @@
 			android:layout_height="wrap_content"
 			android:layout_width="wrap_content"
 			android:src="@android:drawable/ic_input_delete"
-			android:id="@+id/search_cancel"
-			android:tint="?android:attr/colorBackground"
-			style="?android:attr/buttonBarButtonStyle"/>
+			android:background="@android:color/transparent"
+			android:id="@+id/search_cancel"/>
 
 	</LinearLayout>
 
