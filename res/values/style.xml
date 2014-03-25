@@ -8,4 +8,7 @@
 		<item name="android:background">@android:color/transparent</item>
 	</style>
 
+	<style name="TextAppearance" parent="@android:style/TextAppearance" />
+	<style name="TextAppearance.Medium" parent="@android:style/TextAppearance.Medium" />
+	
 </resources>

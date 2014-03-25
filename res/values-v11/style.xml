@@ -3,4 +3,7 @@
     <style name="Theme" parent="android:Theme.Holo" />
     <style name="Theme.Dialog" parent="android:Theme.Holo.Dialog" />
 
+	<style name="TextAppearance" parent="@android:style/TextAppearance.Holo" />
+	<style name="TextAppearance.Medium" parent="@android:style/TextAppearance.Holo.Medium" />
+
 </resources>
