@@ -88,7 +88,11 @@ implements ListFragment.OnListItemClickListener
 		@Override
 		public int getCount()
 		{
-			if (mGroupId < 0)
+			if (mPocketLock == null)
+			{
+				return 0;
+			}
+			else if (mGroupId < 0)
 			{
 				return 1;
 			}
@@ -338,13 +342,16 @@ implements ListFragment.OnListItemClickListener
 			  .append(data.id)
 			  .toString());
 
-		if (TAG_GROUP_LIST.equals(f.getTag()))
+		String tag = f.getArguments().getString(ARG_TAG);
+		if (TAG_GROUP_LIST.equals(tag))
 		{
 			mGroupId = data.id;
+			mPager.setCurrentItem(1);
 		}
-		if (TAG_ENTRY_LIST.equals(f.getTag()))
+		if (TAG_ENTRY_LIST.equals(tag))
 		{
 			mEntryId = data.id;
+			mPager.setCurrentItem(2);
 		}
 		
 		mPagerAdapter.notifyDataSetChanged();
