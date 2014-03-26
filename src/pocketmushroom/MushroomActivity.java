@@ -1,13 +1,18 @@
 package pocketmushroom;
 
-import android.content.*;
-import android.os.*;
-import android.support.v4.app.*;
-import android.util.*;
-import android.view.*;
-import android.widget.*;
-import org.tmatz.pocketmushroom.*;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.view.ViewPager;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.widget.LinearLayout.LayoutParams;
+import android.widget.Toast;
+import org.tmatz.pocketmushroom.R;
 
 public class MushroomActivity
 extends FragmentActivity
@@ -20,6 +25,7 @@ implements ListFragment.OnListItemClickListener
 	public static final String STATE_GROUP_ID = "group_id";
 	public static final String STATE_ENTRY_ID = "entry_id";
 	private static final int REQUEST_LOGIN = 1;
+	private static final String ARG_TAG = "tag";
 	private static final String TAG_GROUP_LIST = "tag_group_list";
 	private static final String TAG_ENTRY_LIST = "tag_entry_list";
 	private static final String TAG_ENTRY_DETAILS = "tag_entry_details";
@@ -30,6 +36,8 @@ implements ListFragment.OnListItemClickListener
 	private PocketLock mPocketLock;
 	private String mCallingPackage;
 	private final StringBuilder mLogBuilder = new StringBuilder();
+	private ViewPager mPager;
+	private PagerAdapter mPagerAdapter;
 
 	@Override
 	public void onSaveInstanceState(Bundle outState)
@@ -69,7 +77,82 @@ implements ListFragment.OnListItemClickListener
 			mEntryId = pref.getInt(STATE_ENTRY_ID, -1);
 		}
 	}
+	
+	private class PagerAdapter extends FragmentStatePagerAdapter
+	{
+		public PagerAdapter(FragmentManager fm)
+		{
+			super(fm);
+		}
+		
+		@Override
+		public int getCount()
+		{
+			if (mGroupId < 0)
+			{
+				return 1;
+			}
+			else if (mEntryId < 0)
+			{
+				return 2;
+			}
+			else
+			{
+				return 3;
+			}
+		}
 
+		@Override
+		public Fragment getItem(int position)
+		{
+			switch (position)
+			{
+				case 0:
+					return createGroupListFragment();
+				case 1:
+					return createEntryListFragment();
+				case 2:
+					return createEntryDetailsFragment();
+				default:
+					return null;
+			}
+		}
+
+		@Override
+		public int getItemPosition(Object object)
+		{
+			Fragment f = (Fragment) object;
+			Bundle arg = f.getArguments();
+			
+			String tag = (arg != null) ? arg.getString(ARG_TAG) : null;
+			if (tag == null)
+			{
+				return POSITION_NONE;
+			}
+			
+			if (TAG_GROUP_LIST.equals(tag))
+			{
+				return POSITION_UNCHANGED;
+			}
+			else if (TAG_ENTRY_LIST.equals(tag))
+			{
+				if (mGroupId == arg.getInt(ListFragment.ARG_GROUP_ID))
+				{
+					return POSITION_UNCHANGED;
+				}
+			}
+			else if (TAG_ENTRY_DETAILS.equals(tag))
+			{
+				if (mEntryId == arg.getInt(EntryDetailFragment.ARG_ENTRY_ID))
+				{
+					return POSITION_UNCHANGED;
+				}
+			}
+			
+			return POSITION_NONE;
+		}
+	}
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
@@ -104,13 +187,13 @@ implements ListFragment.OnListItemClickListener
 		setContentView(R.layout.mushroom_activity);
 		getWindow().setLayout(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
 		
+		mPager = (ViewPager) findViewById(R.id.pager);
+		mPagerAdapter = new PagerAdapter(getSupportFragmentManager());
+		mPager.setAdapter(mPagerAdapter);
+		
 		if (mPocketLock == null)
 		{
 			showLoginActivity();
-		}
-		else if (savedInstanceState == null)
-		{
-			initFragment();
 		}
 	}
 	
@@ -173,7 +256,7 @@ implements ListFragment.OnListItemClickListener
 						}
 						else
 						{
-							initFragment();
+							mPagerAdapter.notifyDataSetChanged();
 						}
 					}
 					else
@@ -185,65 +268,45 @@ implements ListFragment.OnListItemClickListener
 		}
 	}
 
-	private void initFragment()
+	private Fragment createEntryDetailsFragment()
 	{
-		Log.i(TAG, "initFragment");
+		Log.i(TAG, "createEntryDetailsFragment");
 
-		addGroupListFragment();
-		if (mGroupId != -1)
-		{
-			replaceEntryListFragment();
-		}
-		if (mEntryId != -1)
-		{
-			replaceEntryDetailsFragment();
-		}
-	}
-
-	private void replaceEntryDetailsFragment()
-	{
-		Log.i(TAG, "replaceEntryDetailsFragment");
-
-		FragmentManager fm = getSupportFragmentManager();
 		EntryDetailFragment f = new EntryDetailFragment();
 		Bundle args = new Bundle();
+		args.putString(ARG_TAG, TAG_ENTRY_DETAILS);
 		args.putString(EntryDetailFragment.ARG_PACKAGE_NAME, mCallingPackage);
 		args.putInt(EntryDetailFragment.ARG_ENTRY_ID, mEntryId);
 		f.setArguments(args);
-		fm.beginTransaction()
-			.replace(R.id.fragment, f, TAG_ENTRY_DETAILS)
-			.addToBackStack(TAG_ENTRY_DETAILS)
-			.commit();
+		
+		return f;
 	}
 
-	private void replaceEntryListFragment()
+	private Fragment createEntryListFragment()
 	{
-		Log.i(TAG, "replaceEntryListFragment");
+		Log.i(TAG, "createEntryListFragment");
 
-		FragmentManager fm = getSupportFragmentManager();
-		ListFragment f = new ListFragment();
+		Fragment f = new ListFragment();
 		Bundle args = new Bundle();
+		args.putString(ARG_TAG, TAG_ENTRY_LIST);
 		args.putString(ListFragment.ARG_PACKAGE_NAME, mCallingPackage);
 		args.putInt(ListFragment.ARG_GROUP_ID, mGroupId);
 		f.setArguments(args);
-		fm.beginTransaction()
-			.replace(R.id.fragment, f, TAG_ENTRY_LIST)
-			.addToBackStack(TAG_ENTRY_LIST)
-			.commit();
+		
+		return f;
 	}
 
-	private void addGroupListFragment()
+	private Fragment createGroupListFragment()
 	{
-		Log.i(TAG, "addGroupListFragment");
+		Log.i(TAG, "createGroupListFragment");
 
-		FragmentManager fm = getSupportFragmentManager();
-		ListFragment f = new ListFragment();
+		Fragment f = new ListFragment();
 		Bundle args = new Bundle();
+		args.putString(ARG_TAG, TAG_GROUP_LIST);
 		args.putString(ListFragment.ARG_PACKAGE_NAME, mCallingPackage);
 		f.setArguments(args);
-		fm.beginTransaction()
-			.replace(R.id.fragment, f, TAG_GROUP_LIST)
-			.commit();
+		
+		return f;
 	}
 
 	public void onDetachFragment(CustomFragment f)
@@ -278,13 +341,13 @@ implements ListFragment.OnListItemClickListener
 		if (TAG_GROUP_LIST.equals(f.getTag()))
 		{
 			mGroupId = data.id;
-			replaceEntryListFragment();
 		}
 		if (TAG_ENTRY_LIST.equals(f.getTag()))
 		{
 			mEntryId = data.id;
-			replaceEntryDetailsFragment();
 		}
+		
+		mPagerAdapter.notifyDataSetChanged();
 	}
 
 	public void onFieldSelected(EntryDetailFragment f, String value)
