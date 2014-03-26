@@ -346,15 +346,15 @@ implements ListFragment.OnListItemClickListener
 		if (TAG_GROUP_LIST.equals(tag))
 		{
 			mGroupId = data.id;
+			mPagerAdapter.notifyDataSetChanged();
 			mPager.setCurrentItem(1);
 		}
 		if (TAG_ENTRY_LIST.equals(tag))
 		{
 			mEntryId = data.id;
+			mPagerAdapter.notifyDataSetChanged();
 			mPager.setCurrentItem(2);
 		}
-		
-		mPagerAdapter.notifyDataSetChanged();
 	}
 
 	public void onFieldSelected(EntryDetailFragment f, String value)
