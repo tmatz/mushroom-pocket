@@ -4,18 +4,17 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.widget.LinearLayout.LayoutParams;
 import android.widget.Toast;
 import org.tmatz.pocketmushroom.R;
 
 public class MushroomActivity
-extends FragmentActivity
+extends ActionBarActivity
 implements ListFragment.OnListItemClickListener
 , EntryDetailFragment.OnFieldSelectedListener
 {
@@ -198,7 +197,7 @@ implements ListFragment.OnListItemClickListener
 
 		mPocketLock = PocketLock.getPocketLock(mCallingPackage);
 		setContentView(R.layout.mushroom_activity);
-		getWindow().setLayout(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
+		getWindow().setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT);
 		
 		mPager = (ViewPager) findViewById(R.id.pager);
 		mPagerAdapter = new PagerAdapter(getSupportFragmentManager());
@@ -317,6 +316,7 @@ implements ListFragment.OnListItemClickListener
 		return f;
 	}
 
+	@Override
 	public void onListItemSelected(ListFragment f, ListFragment.ItemData data)
 	{
 		mLogBuilder.setLength(0);
@@ -342,6 +342,7 @@ implements ListFragment.OnListItemClickListener
 		}
 	}
 
+	@Override
 	public void onFieldSelected(EntryDetailFragment f, String value)
 	{
 		Log.i(TAG, "onFieldSelected");
