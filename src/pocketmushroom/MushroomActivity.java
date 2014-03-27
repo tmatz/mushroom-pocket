@@ -364,13 +364,29 @@ implements ListFragment.OnListItemClickListener
 		replace(value);
 	}
 
-	// long press return button. finish app.
 	@Override
-	public boolean onKeyLongPress(int code, KeyEvent event)
+	public boolean onKeyUp(int keyCode, KeyEvent event)
 	{
 		if (event.getKeyCode() == KeyEvent.KEYCODE_BACK)
 		{
+			if (mPager.getCurrentItem() > 0)
+			{
+				mPager.setCurrentItem(mPager.getCurrentItem() - 1);
+				return true;
+			}
+		}
+
+		return super.onKeyUp(keyCode, event);
+	}
+
+	@Override
+	public boolean onKeyLongPress(int code, KeyEvent event)
+	{
+		// long press return button. finish app.
+		if (event.getKeyCode() == KeyEvent.KEYCODE_BACK)
+		{
 			this.finish();
+			return true;
 		}
 		return super.onKeyLongPress(code, event);
 	}
