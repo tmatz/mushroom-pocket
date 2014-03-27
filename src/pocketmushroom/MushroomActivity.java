@@ -18,7 +18,6 @@ public class MushroomActivity
 extends FragmentActivity
 implements ListFragment.OnListItemClickListener
 , EntryDetailFragment.OnFieldSelectedListener
-, CustomFragment.OnDetachListener
 {
 	public static final String ACTION_INTERCEPT = "com.adamrocker.android.simeji.ACTION_INTERCEPT";
 	public static final String EXTRA_REPLACE_KEY = "replace_key";
@@ -38,6 +37,16 @@ implements ListFragment.OnListItemClickListener
 	private final StringBuilder mLogBuilder = new StringBuilder();
 	private ViewPager mPager;
 	private PagerAdapter mPagerAdapter;
+
+	private void saveInstanceStateIntoPref()
+	{
+		int currentItem = mPager.getCurrentItem();
+		SharedPreferences pref = getPreferences(MODE_PRIVATE);
+		pref.edit()
+			.putInt(STATE_GROUP_ID, (currentItem > 0) ? mGroupId : -1)
+			.putInt(STATE_ENTRY_ID, (currentItem > 1) ? mEntryId : -1)
+			.commit();
+	}
 
 	@Override
 	public void onSaveInstanceState(Bundle outState)
@@ -163,7 +172,7 @@ implements ListFragment.OnListItemClickListener
 		mLogBuilder.setLength(0);
 		Log.i(TAG, mLogBuilder
 			  .append("onCreate")
-			  .append((savedInstanceState != null) ? "with state" : "")
+			  .append((savedInstanceState != null) ? " with state" : "")
 			  .toString());
 
 		super.onCreate(savedInstanceState);
@@ -195,6 +204,8 @@ implements ListFragment.OnListItemClickListener
 		mPagerAdapter = new PagerAdapter(getSupportFragmentManager());
 		mPager.setAdapter(mPagerAdapter);
 		
+		mPager.setCurrentItem(Math.max(0, mPagerAdapter.getCount() - 1));
+		
 		if (mPocketLock == null)
 		{
 			showLoginActivity();
@@ -215,13 +226,8 @@ implements ListFragment.OnListItemClickListener
 	{
 		Log.i(TAG, "onPause");
 
-		super.onPause();
-		SharedPreferences pref = getPreferences(MODE_PRIVATE);
-		pref.edit()
-			.putInt(STATE_GROUP_ID, mGroupId)
-			.putInt(STATE_ENTRY_ID, mEntryId)
-			.commit();
-
+		super.onPause();		
+		saveInstanceStateIntoPref();
 		PocketLock.startTimer();
 	}
 
@@ -250,23 +256,21 @@ implements ListFragment.OnListItemClickListener
 		switch (request)
 		{
 			case REQUEST_LOGIN:
+				if (result == RESULT_OK)
 				{
-					if (result == RESULT_OK)
+					mPocketLock = PocketLock.getPocketLock(mCallingPackage);
+					if (mPocketLock == null)
 					{
-						mPocketLock = PocketLock.getPocketLock(mCallingPackage);
-						if (mPocketLock == null)
-						{
-							showLoginActivity();
-						}
-						else
-						{
-							mPagerAdapter.notifyDataSetChanged();
-						}
+						showLoginActivity();
 					}
 					else
 					{
-						finish();
+						mPagerAdapter.notifyDataSetChanged();
 					}
+				}
+				else
+				{
+					finish();
 				}
 				break;
 		}
@@ -313,25 +317,6 @@ implements ListFragment.OnListItemClickListener
 		return f;
 	}
 
-	public void onDetachFragment(CustomFragment f)
-	{
-		mLogBuilder.setLength(0);
-		Log.i(TAG, mLogBuilder
-			  .append("onDetachFragment tag = ")
-			  .append(f.getTag())
-			  .toString());
-
-		if (TAG_ENTRY_LIST.equals(f.getTag()))
-		{
-			mGroupId = -1;
-			mEntryId = -1;
-		}
-		else if (TAG_ENTRY_DETAILS.equals(f.getTag()))
-		{
-			mEntryId = -1;
-		}
-	}
-
 	public void onListItemSelected(ListFragment f, ListFragment.ItemData data)
 	{
 		mLogBuilder.setLength(0);
@@ -374,6 +359,10 @@ implements ListFragment.OnListItemClickListener
 				mPager.setCurrentItem(mPager.getCurrentItem() - 1);
 				return true;
 			}
+			else
+			{
+				saveInstanceStateIntoPref();
+			}
 		}
 
 		return super.onKeyUp(keyCode, event);
@@ -385,7 +374,8 @@ implements ListFragment.OnListItemClickListener
 		// long press return button. finish app.
 		if (event.getKeyCode() == KeyEvent.KEYCODE_BACK)
 		{
-			this.finish();
+			saveInstanceStateIntoPref();
+			finish();
 			return true;
 		}
 		return super.onKeyLongPress(code, event);
