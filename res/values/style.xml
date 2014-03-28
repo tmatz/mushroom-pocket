@@ -1,14 +1,11 @@
 <resources>
 
-    <style name="Theme" parent="android:Theme" />
-    <style name="Theme.Dialog" parent="android:Theme.Dialog" />
+    <style name="MyTheme" parent="Theme.AppCompat" />
+    <style name="MyTheme.Dialog" />
 
-	<style name="Theme.ClearButton">
+	<style name="MyTheme.ClearButton">
 		<item name="android:src">@android:drawable/ic_menu_close_clear_cancel</item>
 		<item name="android:background">@android:color/transparent</item>
 	</style>
 
-	<style name="TextAppearance" parent="@android:style/TextAppearance" />
-	<style name="TextAppearance.Medium" parent="@android:style/TextAppearance.Medium" />
-	
 </resources>

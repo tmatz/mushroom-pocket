@@ -30,7 +30,7 @@
 		<ImageButton
 			android:layout_height="wrap_content"
 			android:layout_width="wrap_content"
-			style="@style/Theme.ClearButton"
+			style="@style/MyTheme.ClearButton"
 			android:id="@+id/search_cancel"/>
 
 	</LinearLayout>
