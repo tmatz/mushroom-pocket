@@ -78,7 +78,7 @@ public class EntryDetailFragment extends CustomFragment
 		mListView.setOnItemClickListener(mOnItemClickListener);
 		mPackageName = args.getString(ARG_PACKAGE_NAME);
 		mEntryId = args.getInt(ARG_ENTRY_ID, -1);
-		if (mPackageName != null && mEntryId != -1)
+		if (mEntryId != -1)
 		{
 			mDatabase = PocketDatabase.openDatabase();
 			mPocketLock = PocketLock.getPocketLock(mPackageName);

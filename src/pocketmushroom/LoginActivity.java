@@ -29,13 +29,6 @@ public class LoginActivity extends Activity
 		Intent intent = getIntent();
 		String callingPackage = intent.getStringExtra(EXTRA_PACKAGE_NAME);
 
-		if (callingPackage == null)
-		{
-			setResult(RESULT_CANCELED);
-			finish();
-			return;
-		}
-
 		if (!CreatePocketLock(callingPackage))
 		{
 			setResult(RESULT_CANCELED);

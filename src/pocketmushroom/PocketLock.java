@@ -62,14 +62,18 @@ public class PocketLock
 			expire();
 			return null;
 		}
-		if (sPocketLock != null && sPocketLock.mPackageName.equals(packageName))
+		if (sPocketLock != null)
 		{
-			return sPocketLock;
+			if (sPocketLock.mPackageName == null && packageName == null)
+			{
+				return sPocketLock;
+			}
+			else if (sPocketLock.mPackageName.equals(packageName))
+			{
+				return sPocketLock;
+			}
 		}
-		else
-		{
-			return null;
-		}
+		return null;
 	}
 
 	public static synchronized void setPocketLock(PocketLock lock)

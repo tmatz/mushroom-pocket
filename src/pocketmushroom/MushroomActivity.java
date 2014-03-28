@@ -27,7 +27,7 @@ implements ListFragment.OnListItemClickListener
 	private static final String TAG_GROUP_LIST = "tag_group_list";
 	private static final String TAG_ENTRY_LIST = "tag_entry_list";
 	private static final String TAG_ENTRY_DETAILS = "tag_entry_details";
-	private static final String TAG = "MushroomActivity";
+	private static final String TAG = MushroomActivity.class.getSimpleName();
 
 	private int mGroupId = -1;
 	private int mEntryId = -1;
@@ -189,10 +189,15 @@ implements ListFragment.OnListItemClickListener
 		mCallingPackage = getCallingPackage();
 		if (mCallingPackage == null)
 		{
-			Log.e(TAG, "calling package unkown");
-			setResult(RESULT_CANCELED);
-			finish();
-			return;
+			Log.w(TAG, "calling package unkown");
+			Intent intent = getIntent();
+			if (!intent.getAction().equals("android.intent.action.MAIN") ||
+				!intent.getCategories().contains("android.intent.category.LAUNCHER"))
+			{
+				setResult(RESULT_CANCELED);
+				finish();
+				return;
+			}
 		}
 
 		mPocketLock = PocketLock.getPocketLock(mCallingPackage);
