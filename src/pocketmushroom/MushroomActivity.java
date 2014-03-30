@@ -23,11 +23,7 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.Window;
 import android.widget.ArrayAdapter;
-import android.widget.SpinnerAdapter;
 import android.widget.Toast;
 import org.tmatz.pocketmushroom.R;
 
@@ -41,7 +37,6 @@ implements OnListItemSelectedListener
 	public static final String STATE_ENTRY_ID = "entry_id";
 	private static final int REQUEST_LOGIN = 1;
 	private static final String ARG_TAG = "tag";
-	private static final String TAG_GROUP_LIST = "tag_group_list";
 	private static final String TAG_ENTRY_LIST = "tag_entry_list";
 	private static final String TAG_ENTRY_DETAILS = "tag_entry_details";
 	private static final String TAG = MushroomActivity.class.getSimpleName();
@@ -49,7 +44,6 @@ implements OnListItemSelectedListener
 	private int mGroupId = -1;
 	private int mEntryId = -1;
 	private String mCallingPackage;
-	private final StringBuilder mLogBuilder = new StringBuilder();
 	private ViewPager mPager;
 	private PagerAdapter mPagerAdapter;
 	private ArrayAdapter<GroupInfo> mGroupAdapter;
