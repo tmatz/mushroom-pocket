@@ -64,13 +64,19 @@ public class PocketLock
 		}
 		if (sPocketLock != null)
 		{
-			if (sPocketLock.mPackageName == null && packageName == null)
+			if (packageName == null)
 			{
-				return sPocketLock;
+				if (sPocketLock.mPackageName == null)
+				{
+					return sPocketLock;
+				}
 			}
-			else if (sPocketLock.mPackageName.equals(packageName))
+			else
 			{
-				return sPocketLock;
+				if (packageName.equals(sPocketLock.mPackageName))
+				{
+					return sPocketLock;
+				}
 			}
 		}
 		return null;
