@@ -1,23 +1,35 @@
 package pocketmushroom;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.app.LoaderManager.LoaderCallbacks;
+import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBar.OnNavigationListener;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.widget.LinearLayout.LayoutParams;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.widget.ArrayAdapter;
 import android.widget.Toast;
 import org.tmatz.pocketmushroom.R;
 
 public class MushroomActivity
-extends FragmentActivity
-implements ListFragment.OnListItemClickListener
-, EntryDetailFragment.OnFieldSelectedListener
+extends ActionBarActivity
+implements OnListItemSelectedListener
 {
 	public static final String ACTION_INTERCEPT = "com.adamrocker.android.simeji.ACTION_INTERCEPT";
 	public static final String EXTRA_REPLACE_KEY = "replace_key";
@@ -25,40 +37,31 @@ implements ListFragment.OnListItemClickListener
 	public static final String STATE_ENTRY_ID = "entry_id";
 	private static final int REQUEST_LOGIN = 1;
 	private static final String ARG_TAG = "tag";
-	private static final String TAG_GROUP_LIST = "tag_group_list";
 	private static final String TAG_ENTRY_LIST = "tag_entry_list";
 	private static final String TAG_ENTRY_DETAILS = "tag_entry_details";
-	private static final String TAG = "MushroomActivity";
+	private static final String TAG = MushroomActivity.class.getSimpleName();
 
 	private int mGroupId = -1;
 	private int mEntryId = -1;
-	private PocketLock mPocketLock;
 	private String mCallingPackage;
-	private final StringBuilder mLogBuilder = new StringBuilder();
 	private ViewPager mPager;
 	private PagerAdapter mPagerAdapter;
+	private ArrayAdapter<GroupInfo> mGroupAdapter;
 
 	private void saveInstanceStateIntoPref()
 	{
 		int currentItem = mPager.getCurrentItem();
 		SharedPreferences pref = getPreferences(MODE_PRIVATE);
 		pref.edit()
-			.putInt(STATE_GROUP_ID, (currentItem > 0) ? mGroupId : -1)
-			.putInt(STATE_ENTRY_ID, (currentItem > 1) ? mEntryId : -1)
+			.putInt(STATE_GROUP_ID, mGroupId)
+			.putInt(STATE_ENTRY_ID, (currentItem >= 1) ? mEntryId : -1)
 			.commit();
 	}
 
 	@Override
 	public void onSaveInstanceState(Bundle outState)
 	{
-		mLogBuilder.setLength(0);
-		Log.i(TAG, mLogBuilder
-			  .append("onSaveInstanceState group = ")
-			  .append(mGroupId)
-			  .append(", entry = ")
-			  .append(mEntryId)
-			  .toString());
-
+		Logger.i(TAG, "onSaveInstanceState", "group", mGroupId, "entry", mEntryId);
 		super.onSaveInstanceState(outState);
 
 		outState.putInt(STATE_GROUP_ID, mGroupId);
@@ -67,13 +70,6 @@ implements ListFragment.OnListItemClickListener
 
 	private void restoreInstanceState(Bundle savedInstanceState)
 	{
-		mLogBuilder.setLength(0);
-		Log.i(TAG, mLogBuilder
-			  .append("restoreInstanceState group = ")
-			  .append(mGroupId)
-			  .append(", entry = ")
-			  .append(mEntryId).toString());
-
 		if (savedInstanceState != null)
 		{
 			mGroupId = savedInstanceState.getInt(STATE_GROUP_ID, -1);
@@ -85,6 +81,8 @@ implements ListFragment.OnListItemClickListener
 			mGroupId = pref.getInt(STATE_GROUP_ID, -1);
 			mEntryId = pref.getInt(STATE_ENTRY_ID, -1);
 		}
+
+		Logger.i(TAG, "restoreInstanceState", "group", mGroupId, "entry", mEntryId);
 	}
 	
 	private class PagerAdapter extends FragmentStatePagerAdapter
@@ -97,21 +95,17 @@ implements ListFragment.OnListItemClickListener
 		@Override
 		public int getCount()
 		{
-			if (mPocketLock == null)
+			if (PocketLock.getPocketLock(mCallingPackage) == null)
 			{
 				return 0;
 			}
-			else if (mGroupId < 0)
+			else if (mEntryId < 0)
 			{
 				return 1;
 			}
-			else if (mEntryId < 0)
-			{
-				return 2;
-			}
 			else
 			{
-				return 3;
+				return 2;
 			}
 		}
 
@@ -121,10 +115,8 @@ implements ListFragment.OnListItemClickListener
 			switch (position)
 			{
 				case 0:
-					return createGroupListFragment();
-				case 1:
 					return createEntryListFragment();
-				case 2:
+				case 1:
 					return createEntryDetailsFragment();
 				default:
 					return null;
@@ -136,27 +128,22 @@ implements ListFragment.OnListItemClickListener
 		{
 			Fragment f = (Fragment) object;
 			Bundle arg = f.getArguments();
-			
-			String tag = (arg != null) ? arg.getString(ARG_TAG) : null;
-			if (tag == null)
+			if (arg == null || arg.getString(ARG_TAG) == null)
 			{
-				return POSITION_NONE;
+				throw new IllegalStateException("fragment does not have argument.");
 			}
-			
-			if (TAG_GROUP_LIST.equals(tag))
+
+			String tag = arg.getString(ARG_TAG);
+			if (TAG_ENTRY_LIST.equals(tag))
 			{
-				return POSITION_UNCHANGED;
-			}
-			else if (TAG_ENTRY_LIST.equals(tag))
-			{
-				if (mGroupId == arg.getInt(ListFragment.ARG_GROUP_ID))
+				if (mGroupId == arg.getInt(EntriesFragment.ARG_GROUP_ID))
 				{
 					return POSITION_UNCHANGED;
 				}
 			}
 			else if (TAG_ENTRY_DETAILS.equals(tag))
 			{
-				if (mEntryId == arg.getInt(EntryDetailFragment.ARG_ENTRY_ID))
+				if (mEntryId == arg.getInt(FieldsFragment.ARG_ENTRY_ID))
 				{
 					return POSITION_UNCHANGED;
 				}
@@ -169,12 +156,7 @@ implements ListFragment.OnListItemClickListener
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
-		mLogBuilder.setLength(0);
-		Log.i(TAG, mLogBuilder
-			  .append("onCreate")
-			  .append((savedInstanceState != null) ? " with state" : "")
-			  .toString());
-
+		Logger.i(TAG, "onCreate", (savedInstanceState != null) ? "with state" : null);
 		super.onCreate(savedInstanceState);
 		restoreInstanceState(savedInstanceState);
 
@@ -188,17 +170,29 @@ implements ListFragment.OnListItemClickListener
 		}
 
 		mCallingPackage = getCallingPackage();
+		
 		if (mCallingPackage == null)
 		{
-			Log.e(TAG, "calling package unkown");
-			setResult(RESULT_CANCELED);
-			finish();
-			return;
+			Intent intent = getIntent();
+			if (intent.getAction().equals(ACTION_INTERCEPT))
+			{
+				Log.w(TAG, "calling package unkown");
+				{
+					setResult(RESULT_CANCELED);
+					finish();
+					return;
+				}
+			}
 		}
 
-		mPocketLock = PocketLock.getPocketLock(mCallingPackage);
+		ActionBar actionBar = getSupportActionBar();
+		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
+		
+		mGroupAdapter = new ArrayAdapter<GroupInfo>(this, android.R.layout.simple_spinner_dropdown_item);
+		mGroupAdapter.setNotifyOnChange(true);
+		
 		setContentView(R.layout.mushroom_activity);
-		getWindow().setLayout(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
+		getWindow().setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT);
 		
 		mPager = (ViewPager) findViewById(R.id.pager);
 		mPagerAdapter = new PagerAdapter(getSupportFragmentManager());
@@ -206,10 +200,31 @@ implements ListFragment.OnListItemClickListener
 		
 		mPager.setCurrentItem(Math.max(0, mPagerAdapter.getCount() - 1));
 		
-		if (mPocketLock == null)
+		actionBar.setListNavigationCallbacks(
+			mGroupAdapter,
+			new OnNavigationListener()
+		{
+			@Override
+			public boolean onNavigationItemSelected(int itemPosition, long itemId)
+			{
+				mGroupId = mGroupAdapter.getItem(itemPosition).id;
+				mPagerAdapter.notifyDataSetChanged();
+				return true;
+			}});
+		
+		getSupportLoaderManager().initLoader(0, null, mGroupInfoLoaderCallbacks);
+		
+		if (PocketLock.getPocketLock(mCallingPackage) == null)
 		{
 			showLoginActivity();
 		}
+	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.menu_mushroom_activity, menu);
+		return true;
 	}
 	
 	@Override
@@ -244,13 +259,7 @@ implements ListFragment.OnListItemClickListener
 	@Override
 	public void onActivityResult(int request, int result, Intent data)
 	{
-		mLogBuilder.setLength(0);
-		Log.i(TAG, mLogBuilder
-			  .append("onActivityResult request = ")
-			  .append(request)
-			  .append(", result = ")
-			  .append(result)
-			  .toString());
+		Logger.i(TAG, "onActivityResult", request, result);
 
 		super.onActivityResult(request, result, data);
 		switch (request)
@@ -258,8 +267,7 @@ implements ListFragment.OnListItemClickListener
 			case REQUEST_LOGIN:
 				if (result == RESULT_OK)
 				{
-					mPocketLock = PocketLock.getPocketLock(mCallingPackage);
-					if (mPocketLock == null)
+					if (PocketLock.getPocketLock(mCallingPackage) == null)
 					{
 						showLoginActivity();
 					}
@@ -280,73 +288,41 @@ implements ListFragment.OnListItemClickListener
 	{
 		Log.i(TAG, "createEntryDetailsFragment");
 
-		EntryDetailFragment f = new EntryDetailFragment();
 		Bundle args = new Bundle();
 		args.putString(ARG_TAG, TAG_ENTRY_DETAILS);
-		args.putString(EntryDetailFragment.ARG_PACKAGE_NAME, mCallingPackage);
-		args.putInt(EntryDetailFragment.ARG_ENTRY_ID, mEntryId);
-		f.setArguments(args);
-		
-		return f;
+
+		return FieldsFragment.createInstance(mCallingPackage, mEntryId, args);
 	}
 
 	private Fragment createEntryListFragment()
 	{
 		Log.i(TAG, "createEntryListFragment");
 
-		Fragment f = new ListFragment();
 		Bundle args = new Bundle();
 		args.putString(ARG_TAG, TAG_ENTRY_LIST);
-		args.putString(ListFragment.ARG_PACKAGE_NAME, mCallingPackage);
-		args.putInt(ListFragment.ARG_GROUP_ID, mGroupId);
-		f.setArguments(args);
-		
-		return f;
+
+		return EntriesFragment.createInstance(mCallingPackage, mGroupId, args);
 	}
 
-	private Fragment createGroupListFragment()
+	@Override
+	public void onListItemSelected(Fragment f, Object data)
 	{
-		Log.i(TAG, "createGroupListFragment");
-
-		Fragment f = new ListFragment();
-		Bundle args = new Bundle();
-		args.putString(ARG_TAG, TAG_GROUP_LIST);
-		args.putString(ListFragment.ARG_PACKAGE_NAME, mCallingPackage);
-		f.setArguments(args);
-		
-		return f;
-	}
-
-	public void onListItemSelected(ListFragment f, ListFragment.ItemData data)
-	{
-		mLogBuilder.setLength(0);
-		Log.i(TAG, mLogBuilder
-			  .append("onListItemSelected tag = ")
-			  .append(f.getTag())
-			  .append(", id = ")
-			  .append(data.id)
-			  .toString());
-
 		String tag = f.getArguments().getString(ARG_TAG);
-		if (TAG_GROUP_LIST.equals(tag))
+		
+		if (TAG_ENTRY_LIST.equals(tag))
 		{
-			mGroupId = data.id;
+			EntryInfo item = (EntryInfo)data;
+			Logger.i(TAG, "onListItemSelected", tag, item.id);
+			mEntryId = item.id;
 			mPagerAdapter.notifyDataSetChanged();
 			mPager.setCurrentItem(1);
 		}
-		if (TAG_ENTRY_LIST.equals(tag))
+		else if (TAG_ENTRY_DETAILS.equals(tag))
 		{
-			mEntryId = data.id;
-			mPagerAdapter.notifyDataSetChanged();
-			mPager.setCurrentItem(2);
+			FieldInfo item = (FieldInfo)data;
+			Logger.i(TAG, "onListItemSelected", tag, item.id);
+			replace(item.value);
 		}
-	}
-
-	public void onFieldSelected(EntryDetailFragment f, String value)
-	{
-		Log.i(TAG, "onFieldSelected");
-
-		replace(value);
 	}
 
 	@Override
@@ -390,5 +366,89 @@ implements ListFragment.OnListItemClickListener
 		data.putExtra(EXTRA_REPLACE_KEY, result);
 		setResult(RESULT_OK, data);
 		finish();
+	}
+
+	private final LoaderCallbacks<List<GroupInfo>> mGroupInfoLoaderCallbacks = new LoaderCallbacks<List<GroupInfo>>()
+	{
+		@Override
+		public Loader<List<GroupInfo>> onCreateLoader(int id, Bundle arg)
+		{
+			Logger.i(TAG, "onCreateLoader");
+			switch (id)
+			{
+			case 0:
+				return new GroupInfoLoader(MushroomActivity.this, mCallingPackage);
+			}
+			return null;
+		}
+
+		@Override
+		public void onLoadFinished(Loader<List<GroupInfo>> loader, List<GroupInfo> data)
+		{
+			Logger.i(TAG, "onLoadFinished");
+			mGroupAdapter.clear();
+			if (data != null)
+			{
+				for (GroupInfo item: data)
+				{
+					mGroupAdapter.add(item);
+				}
+			}
+			
+			int count = mGroupAdapter.getCount();
+			for (int i = 0; i < count; ++i)
+			{
+				if (mGroupAdapter.getItem(i).id == mGroupId)
+				{
+					getSupportActionBar().setSelectedNavigationItem(i);
+				}
+			}
+			
+			mPagerAdapter.notifyDataSetChanged();
+			mPager.setCurrentItem(0);
+		}
+
+		@Override
+		public void onLoaderReset(Loader<List<GroupInfo>> loader)
+		{
+			Logger.i(TAG, "onLoaderReset");
+			mGroupAdapter.clear();
+		}
+	};
+	
+	private static class GroupInfoLoader extends CachedAsyncTaskLoader<List<GroupInfo>>
+	{
+		private String mPackageName;
+
+		public GroupInfoLoader(Context context, String packageName)
+		{
+			super(context);
+			mPackageName = packageName;
+		}
+		
+		@Override
+		public List<GroupInfo> loadInBackground()
+		{
+			PocketLock pocketLock = PocketLock.getPocketLock(mPackageName);
+			SQLiteDatabase database = PocketDatabase.openDatabase();
+			if (pocketLock == null || database == null)
+			{
+				return null;
+			}
+			
+			ArrayList<GroupInfo> items = new ArrayList<GroupInfo>();
+			
+			Cursor c = database.rawQuery("select _id, title from groups", null);
+			while (c.moveToNext())
+			{
+				items.add(new GroupInfo(c.getInt(0), pocketLock.decrypt(c.getString(1))));
+			}
+			c.close();
+
+			Collections.sort(items);
+			
+			items.add(0, new GroupInfo(-1, getContext().getString(R.string.all_entries)));
+			return items;
+		}
 	}
 }

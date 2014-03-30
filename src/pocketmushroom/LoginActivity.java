@@ -8,10 +8,6 @@ import android.view.*;
 import android.view.View.*;
 import android.widget.*;
 import org.tmatz.pocketmushroom.*;
-import android.text.TextWatcher;
-import android.text.Editable;
-import android.text.TextUtils;
-import android.text.Layout;
 import android.widget.RadioGroup.LayoutParams;
 
 public class LoginActivity extends Activity
@@ -33,13 +29,6 @@ public class LoginActivity extends Activity
 		Intent intent = getIntent();
 		String callingPackage = intent.getStringExtra(EXTRA_PACKAGE_NAME);
 
-		if (callingPackage == null)
-		{
-			setResult(RESULT_CANCELED);
-			finish();
-			return;
-		}
-
 		if (!CreatePocketLock(callingPackage))
 		{
 			setResult(RESULT_CANCELED);
@@ -48,7 +37,7 @@ public class LoginActivity extends Activity
 		}
 
 		setContentView(R.layout.login_activity);
-		getWindow().setLayout(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
+		getWindow().setLayout(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
 
 		final ImageView appIconView = (ImageView) findViewById(R.id.applicatio_icon);
 		final TextView appLabelView = (TextView) findViewById(R.id.application_label);
