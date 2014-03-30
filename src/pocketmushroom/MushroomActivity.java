@@ -151,14 +151,14 @@ implements OnListItemSelectedListener
 			}
 			else if (TAG_ENTRY_LIST.equals(tag))
 			{
-				if (mGroupId == arg.getInt(ListFragment.ARG_GROUP_ID))
+				if (mGroupId == arg.getInt(EntriesFragment.ARG_GROUP_ID))
 				{
 					return POSITION_UNCHANGED;
 				}
 			}
 			else if (TAG_ENTRY_DETAILS.equals(tag))
 			{
-				if (mEntryId == arg.getInt(EntryDetailFragment.ARG_ENTRY_ID))
+				if (mEntryId == arg.getInt(FieldsFragment.ARG_ENTRY_ID))
 				{
 					return POSITION_UNCHANGED;
 				}
