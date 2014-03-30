@@ -2,4 +2,7 @@
 <resources>
 	<string name="hello">Pocketマッシュルーム</string>
 	<string name="app_name">Pocketマッシュルーム</string>
+	<string name="all_entries">すべての項目</string>
+	<string name="no_entries">未登録</string>
+	<string name="no_fields">未登録</string>
 </resources>

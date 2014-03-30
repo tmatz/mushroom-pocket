@@ -113,7 +113,7 @@ public class FieldsFragment extends CustomListFragment
 
 		mAdapter.setNotifyOnChange(true);
 
-		setEmptyText("No Fields");
+		setEmptyText(getResources().getString(R.string.no_fields));
 
 		LoaderManager manager = getLoaderManager();
 		manager.initLoader(0, getArguments(), this);
@@ -262,7 +262,7 @@ public class FieldsFragment extends CustomListFragment
 	@Override
 	public void onLoaderReset(Loader<List<FieldInfo>> loader)
 	{
-		Logger.i(TAG, "onLoadFinished");
+		Logger.i(TAG, "onLoaderReset");
 		setListAdapter(mAdapter);
 	}
 }

@@ -71,7 +71,7 @@ public class EntriesFragment extends CustomListFragment
 			android.R.layout.simple_list_item_1);
 		mAdapter.setNotifyOnChange(true);
 
-		setEmptyText("No Entry");
+		setEmptyText(getResources().getString(R.string.no_entries));
 
 		LoaderManager manager = getLoaderManager();
 		manager.initLoader(0, getArguments(), this);
