@@ -30,13 +30,6 @@ public class ListFragment extends CustomFragment
 	public static final String ARG_PACKAGE_NAME = "package_name";
 	public static final String ARG_GROUP_ID = "group_id";
 
-	// Method will be ivoked when list item is clicked.
-	// Activity implements this interface.
-	public interface OnListItemClickListener
-	{
-		void onListItemSelected(ListFragment f, ItemData data);
-	}
-
 	public class ItemData
 	{
 		public int id;
@@ -58,10 +51,10 @@ public class ListFragment extends CustomFragment
                 getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
 			imm.hideSoftInputFromWindow(mSearchText.getWindowToken(), 0);
 			
-			if (getActivity() instanceof OnListItemClickListener)
+			if (getActivity() instanceof OnListItemSelectedListener)
 			{
 				ItemData data = (ItemData) view.getTag();
-				((OnListItemClickListener) getActivity())
+				((OnListItemSelectedListener) getActivity())
 					.onListItemSelected(ListFragment.this, data);
 			}
 		}

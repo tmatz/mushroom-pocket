@@ -2,3 +2,5 @@ gen
 bin
 out
 .idea
+lint.xml
+.settings

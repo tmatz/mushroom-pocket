@@ -17,4 +17,6 @@
 	<string name="package_name">Login request from:</string>
 	<string name="password">Password:</string>
 	<string name="notes">Notes</string>
+	<string name="action_search">Search</string>
+	<string name="action_settings">Settings</string>
 </resources>

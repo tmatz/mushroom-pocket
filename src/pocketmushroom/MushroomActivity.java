@@ -10,13 +10,14 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.widget.Toast;
 import org.tmatz.pocketmushroom.R;
 
 public class MushroomActivity
 extends ActionBarActivity
-implements ListFragment.OnListItemClickListener
-, EntryDetailFragment.OnFieldSelectedListener
+implements OnListItemSelectedListener
 {
 	public static final String ACTION_INTERCEPT = "com.adamrocker.android.simeji.ACTION_INTERCEPT";
 	public static final String EXTRA_REPLACE_KEY = "replace_key";
@@ -217,6 +218,13 @@ implements ListFragment.OnListItemClickListener
 	}
 	
 	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.menu_mushroom_activity, menu);
+		return true;
+	}
+	
+	@Override
 	public void onResume()
 	{
 		Log.i(TAG, "onResume");
@@ -248,13 +256,7 @@ implements ListFragment.OnListItemClickListener
 	@Override
 	public void onActivityResult(int request, int result, Intent data)
 	{
-		mLogBuilder.setLength(0);
-		Log.i(TAG, mLogBuilder
-			  .append("onActivityResult request = ")
-			  .append(request)
-			  .append(", result = ")
-			  .append(result)
-			  .toString());
+		Logger.i(TAG, "onActivityResult", request, result);
 
 		super.onActivityResult(request, result, data);
 		switch (request)
@@ -284,28 +286,20 @@ implements ListFragment.OnListItemClickListener
 	{
 		Log.i(TAG, "createEntryDetailsFragment");
 
-		EntryDetailFragment f = new EntryDetailFragment();
 		Bundle args = new Bundle();
 		args.putString(ARG_TAG, TAG_ENTRY_DETAILS);
-		args.putString(EntryDetailFragment.ARG_PACKAGE_NAME, mCallingPackage);
-		args.putInt(EntryDetailFragment.ARG_ENTRY_ID, mEntryId);
-		f.setArguments(args);
-		
-		return f;
+
+		return FieldsFragment.createInstance(mCallingPackage, mEntryId, args);
 	}
 
 	private Fragment createEntryListFragment()
 	{
 		Log.i(TAG, "createEntryListFragment");
 
-		Fragment f = new ListFragment();
 		Bundle args = new Bundle();
 		args.putString(ARG_TAG, TAG_ENTRY_LIST);
-		args.putString(ListFragment.ARG_PACKAGE_NAME, mCallingPackage);
-		args.putInt(ListFragment.ARG_GROUP_ID, mGroupId);
-		f.setArguments(args);
-		
-		return f;
+
+		return EntriesFragment.createInstance(mCallingPackage, mGroupId, args);
 	}
 
 	private Fragment createGroupListFragment()
@@ -322,37 +316,41 @@ implements ListFragment.OnListItemClickListener
 	}
 
 	@Override
-	public void onListItemSelected(ListFragment f, ListFragment.ItemData data)
+	public void onListItemSelected(Fragment f, Object data)
 	{
-		mLogBuilder.setLength(0);
-		Log.i(TAG, mLogBuilder
-			  .append("onListItemSelected tag = ")
-			  .append(f.getTag())
-			  .append(", id = ")
-			  .append(data.id)
-			  .toString());
-
 		String tag = f.getArguments().getString(ARG_TAG);
+		
 		if (TAG_GROUP_LIST.equals(tag))
 		{
-			mGroupId = data.id;
-			mPagerAdapter.notifyDataSetChanged();
-			mPager.setCurrentItem(1);
+			if (data instanceof ListFragment.ItemData)
+			{
+				ListFragment.ItemData item = (ListFragment.ItemData)data;
+				Logger.i(TAG, "onListItemSelected", tag, item.id);
+	
+				mGroupId = item.id;
+				mPagerAdapter.notifyDataSetChanged();
+				mPager.setCurrentItem(1);
+			}
 		}
-		if (TAG_ENTRY_LIST.equals(tag))
+		else if (TAG_ENTRY_LIST.equals(tag))
 		{
-			mEntryId = data.id;
-			mPagerAdapter.notifyDataSetChanged();
-			mPager.setCurrentItem(2);
+			if (data instanceof EntryInfo)
+			{
+				EntryInfo item = (EntryInfo)data;
+				mEntryId = item.id;
+				mPagerAdapter.notifyDataSetChanged();
+				mPager.setCurrentItem(2);
+			}
 		}
-	}
-
-	@Override
-	public void onFieldSelected(EntryDetailFragment f, String value)
-	{
-		Log.i(TAG, "onFieldSelected");
-
-		replace(value);
+		else if (TAG_ENTRY_DETAILS.equals(tag))
+		{
+			if (data instanceof EntryInfo)
+			{
+				FieldInfo item = (FieldInfo)data;
+				Logger.i(TAG, "field selected", item.id);
+				replace(item.value);
+			}
+		}
 	}
 
 	@Override
