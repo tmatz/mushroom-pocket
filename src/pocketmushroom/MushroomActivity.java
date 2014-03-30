@@ -1,5 +1,7 @@
 package pocketmushroom;
 
+import java.util.Set;
+
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -188,16 +190,18 @@ implements OnListItemSelectedListener
 		}
 
 		mCallingPackage = getCallingPackage();
+		
 		if (mCallingPackage == null)
 		{
-			Log.w(TAG, "calling package unkown");
 			Intent intent = getIntent();
-			if (!intent.getAction().equals("android.intent.action.MAIN") ||
-				!intent.getCategories().contains("android.intent.category.LAUNCHER"))
+			if (intent.getAction().equals(ACTION_INTERCEPT))
 			{
-				setResult(RESULT_CANCELED);
-				finish();
-				return;
+				Log.w(TAG, "calling package unkown");
+				{
+					setResult(RESULT_CANCELED);
+					finish();
+					return;
+				}
 			}
 		}
 
@@ -322,34 +326,25 @@ implements OnListItemSelectedListener
 		
 		if (TAG_GROUP_LIST.equals(tag))
 		{
-			if (data instanceof ListFragment.ItemData)
-			{
-				ListFragment.ItemData item = (ListFragment.ItemData)data;
-				Logger.i(TAG, "onListItemSelected", tag, item.id);
-	
-				mGroupId = item.id;
-				mPagerAdapter.notifyDataSetChanged();
-				mPager.setCurrentItem(1);
-			}
+			ListFragment.ItemData item = (ListFragment.ItemData) data;
+			Logger.i(TAG, "onListItemSelected", tag, item.id);
+			mGroupId = item.id;
+			mPagerAdapter.notifyDataSetChanged();
+			mPager.setCurrentItem(1);
 		}
 		else if (TAG_ENTRY_LIST.equals(tag))
 		{
-			if (data instanceof EntryInfo)
-			{
-				EntryInfo item = (EntryInfo)data;
-				mEntryId = item.id;
-				mPagerAdapter.notifyDataSetChanged();
-				mPager.setCurrentItem(2);
-			}
+			EntryInfo item = (EntryInfo)data;
+			Logger.i(TAG, "onListItemSelected", tag, item.id);
+			mEntryId = item.id;
+			mPagerAdapter.notifyDataSetChanged();
+			mPager.setCurrentItem(2);
 		}
 		else if (TAG_ENTRY_DETAILS.equals(tag))
 		{
-			if (data instanceof EntryInfo)
-			{
-				FieldInfo item = (FieldInfo)data;
-				Logger.i(TAG, "field selected", item.id);
-				replace(item.value);
-			}
+			FieldInfo item = (FieldInfo)data;
+			Logger.i(TAG, "onListItemSelected", tag, item.id);
+			replace(item.value);
 		}
 	}
 
