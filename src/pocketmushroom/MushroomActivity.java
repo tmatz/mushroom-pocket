@@ -188,7 +188,7 @@ implements OnListItemSelectedListener
 		ActionBar actionBar = getSupportActionBar();
 		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
 		
-		mGroupAdapter = new ArrayAdapter<GroupInfo>(this, android.R.layout.simple_spinner_dropdown_item);
+		mGroupAdapter = new ArrayAdapter<GroupInfo>(this, R.layout.support_simple_spinner_dropdown_item);
 		mGroupAdapter.setNotifyOnChange(true);
 		
 		setContentView(R.layout.mushroom_activity);
