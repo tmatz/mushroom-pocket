@@ -174,7 +174,7 @@ implements OnListItemSelectedListener
 		if (mCallingPackage == null)
 		{
 			Intent intent = getIntent();
-			if (intent.getAction().equals(ACTION_INTERCEPT))
+			if (ACTION_INTERCEPT.equals(intent.getAction()))
 			{
 				Log.w(TAG, "calling package unkown");
 				{
@@ -335,10 +335,6 @@ implements OnListItemSelectedListener
 				mPager.setCurrentItem(mPager.getCurrentItem() - 1);
 				return true;
 			}
-			else
-			{
-				saveInstanceStateIntoPref();
-			}
 		}
 
 		return super.onKeyUp(keyCode, event);
@@ -350,10 +346,10 @@ implements OnListItemSelectedListener
 		// long press return button. finish app.
 		if (event.getKeyCode() == KeyEvent.KEYCODE_BACK)
 		{
-			saveInstanceStateIntoPref();
 			finish();
 			return true;
 		}
+
 		return super.onKeyLongPress(code, event);
 	}
 
@@ -403,9 +399,6 @@ implements OnListItemSelectedListener
 					getSupportActionBar().setSelectedNavigationItem(i);
 				}
 			}
-			
-			mPagerAdapter.notifyDataSetChanged();
-			mPager.setCurrentItem(0);
 		}
 
 		@Override
