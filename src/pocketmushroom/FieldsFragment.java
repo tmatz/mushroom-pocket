@@ -248,9 +248,12 @@ public class FieldsFragment extends CustomListFragment
 		List<FieldInfo> items)
 	{
 		Logger.i(TAG, "onLoadFinished");
-		for (FieldInfo i : items)
+		if (items != null)
 		{
-			mAdapter.add(i);
+			for (FieldInfo i : items)
+			{
+				mAdapter.add(i);
+			}
 		}
 		setListAdapter(mAdapter);
 	}

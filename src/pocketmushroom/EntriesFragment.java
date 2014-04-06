@@ -190,9 +190,12 @@ public class EntriesFragment extends CustomListFragment
 		List<EntryInfo> items)
 	{
 		Logger.i(TAG, "onLoadFinished");
-		for (EntryInfo i : items)
+		if (items != null)
 		{
-			mAdapter.add(i);
+			for (EntryInfo i : items)
+			{
+				mAdapter.add(i);
+			}
 		}
 		setListAdapter(mAdapter);
 	}

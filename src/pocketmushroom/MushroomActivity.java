@@ -29,7 +29,7 @@ import org.tmatz.pocketmushroom.R;
 
 public class MushroomActivity
 extends ActionBarActivity
-implements OnListItemSelectedListener
+implements OnListItemSelectedListener, LoginFragment.DialogListener
 {
 	public static final String ACTION_INTERCEPT = "com.adamrocker.android.simeji.ACTION_INTERCEPT";
 	public static final String EXTRA_REPLACE_KEY = "replace_key";
@@ -42,7 +42,7 @@ implements OnListItemSelectedListener
 	private static final String ARG_DIGEST = "digest";
 	private static final String ARG_POSITION = "position";
 	private static final String ARG_TAG = "tag";
-	private static final int REQUEST_LOGIN = 1;
+	private static final int LOADER_GROUP_LIST = 0;
 
 	private int mGroupId = -1;
 	private int mEntryId = -1;
@@ -80,6 +80,10 @@ implements OnListItemSelectedListener
 			mGroupId = savedInstanceState.getInt(STATE_GROUP_ID, -1);
 			mEntryId = savedInstanceState.getInt(STATE_ENTRY_ID, -1);
 			mFragmentArguments = savedInstanceState.getParcelableArrayList(STATE_FRAGMENT_ARGUMENTS);
+			if (mPagerAdapter != null)
+			{
+				mPagerAdapter.notifyDataSetChanged();
+			}
 		}
 		else
 		{
@@ -139,9 +143,6 @@ implements OnListItemSelectedListener
 		
 		mPager = (ViewPager) findViewById(R.id.pager);
 		mPagerAdapter = new PagerAdapter(getSupportFragmentManager());
-		mPager.setAdapter(mPagerAdapter);
-
-		restoreInstanceState(savedInstanceState);
 		
 		actionBar.setListNavigationCallbacks(
 			mGroupAdapter,
@@ -158,12 +159,23 @@ implements OnListItemSelectedListener
 				return true;
 			}});
 		
-		getSupportLoaderManager().initLoader(0, null, mGroupInfoLoaderCallbacks);
-		
-		if (PocketLock.getPocketLock(mCallingPackage) == null)
+		restoreInstanceState(savedInstanceState);
+
+		if (PocketLock.getPocketLock(mCallingPackage) != null)
 		{
-			showLoginActivity();
+			onGetPocketLock();
 		}
+		else
+		{
+			showLoginDialog();
+		}
+	}
+	
+	private void onGetPocketLock()
+	{
+		mPager.setAdapter(mPagerAdapter);
+		mPager.setCurrentItem(Math.max(0, mPagerAdapter.getCount() - 1));
+		getSupportLoaderManager().initLoader(LOADER_GROUP_LIST, null, mGroupInfoLoaderCallbacks);
 	}
 	
 	@Override
@@ -192,41 +204,15 @@ implements OnListItemSelectedListener
 		PocketLock.startTimer();
 	}
 
-	private void showLoginActivity()
+	private void showLoginDialog()
 	{
-		Log.i(TAG, "showLoginActivity");
+		Log.i(TAG, "showLoginDialog");
 
-		Intent intent = new Intent();
-		intent.setAction(LoginActivity.ACTION_LOGIN);
-		intent.putExtra(LoginActivity.EXTRA_PACKAGE_NAME, mCallingPackage);
-		startActivityForResult(intent, REQUEST_LOGIN);
-	}
-
-	@Override
-	public void onActivityResult(int request, int result, Intent data)
-	{
-		Logger.i(TAG, "onActivityResult", request, result);
-
-		super.onActivityResult(request, result, data);
-		switch (request)
+		FragmentManager fm = getSupportFragmentManager();
+		if (fm.findFragmentByTag("login") == null)
 		{
-			case REQUEST_LOGIN:
-				if (result == RESULT_OK)
-				{
-					if (PocketLock.getPocketLock(mCallingPackage) == null)
-					{
-						showLoginActivity();
-					}
-					else
-					{
-						mPagerAdapter.notifyDataSetChanged();
-					}
-				}
-				else
-				{
-					finish();
-				}
-				break;
+			LoginFragment login = LoginFragment.newInstance(mCallingPackage);
+			login.show(fm, "login");
 		}
 	}
 
@@ -333,8 +319,27 @@ implements OnListItemSelectedListener
 		}
 	}
 	
-	private void calcArgumentsDigest(Bundle arg)
+	@Override
+	public void onOK(LoginFragment fragment)
 	{
+		Logger.i(TAG, "onOK");
+
+		if (PocketLock.getPocketLock(mCallingPackage) == null)
+		{
+			throw new IllegalStateException("cant unlock database.");
+		}
+		else
+		{
+			mPager.setAdapter(mPagerAdapter);
+			getSupportLoaderManager().initLoader(LOADER_GROUP_LIST, null, mGroupInfoLoaderCallbacks);
+		}
+	}
+
+	@Override
+	public void onCancel(LoginFragment fragment)
+	{
+		Logger.i(TAG, "onCancel");
+		finish();
 	}
 
 	private class PagerAdapter extends FragmentStatePagerAdapter
