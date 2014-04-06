@@ -33,17 +33,21 @@ implements OnListItemSelectedListener
 {
 	public static final String ACTION_INTERCEPT = "com.adamrocker.android.simeji.ACTION_INTERCEPT";
 	public static final String EXTRA_REPLACE_KEY = "replace_key";
-	public static final String STATE_GROUP_ID = "group_id";
+
 	public static final String STATE_ENTRY_ID = "entry_id";
-	private static final int REQUEST_LOGIN = 1;
+	public static final String STATE_GROUP_ID = "group_id";
+	public static final String STATE_FRAGMENT_ARGUMENTS = "state_fragment_arguments";
+	public static final String TAG = MushroomActivity.class.getSimpleName();
+
+	private static final String ARG_DIGEST = "digest";
+	private static final String ARG_POSITION = "position";
 	private static final String ARG_TAG = "tag";
-	private static final String TAG_ENTRY_LIST = "tag_entry_list";
-	private static final String TAG_ENTRY_DETAILS = "tag_entry_details";
-	private static final String TAG = MushroomActivity.class.getSimpleName();
+	private static final int REQUEST_LOGIN = 1;
 
 	private int mGroupId = -1;
 	private int mEntryId = -1;
 	private String mCallingPackage;
+	private ArrayList<Bundle> mFragmentArguments = new ArrayList<Bundle>();
 	private ViewPager mPager;
 	private PagerAdapter mPagerAdapter;
 	private ArrayAdapter<GroupInfo> mGroupAdapter;
@@ -66,6 +70,7 @@ implements OnListItemSelectedListener
 
 		outState.putInt(STATE_GROUP_ID, mGroupId);
 		outState.putInt(STATE_ENTRY_ID, mEntryId);
+		outState.putParcelableArrayList(STATE_FRAGMENT_ARGUMENTS, mFragmentArguments);
 	}
 
 	private void restoreInstanceState(Bundle savedInstanceState)
@@ -74,83 +79,22 @@ implements OnListItemSelectedListener
 		{
 			mGroupId = savedInstanceState.getInt(STATE_GROUP_ID, -1);
 			mEntryId = savedInstanceState.getInt(STATE_ENTRY_ID, -1);
+			mFragmentArguments = savedInstanceState.getParcelableArrayList(STATE_FRAGMENT_ARGUMENTS);
 		}
 		else
 		{
 			SharedPreferences pref = getPreferences(MODE_PRIVATE);
 			mGroupId = pref.getInt(STATE_GROUP_ID, -1);
 			mEntryId = pref.getInt(STATE_ENTRY_ID, -1);
+
+			setPage(0, EntriesFragment.TAG, EntriesFragment.newArgument(mCallingPackage, mGroupId, null), false);
+			if (mEntryId != -1)
+			{
+				setPage(1, FieldsFragment.TAG, FieldsFragment.newArgument(mCallingPackage, mEntryId, null), false);
+			}
 		}
 
 		Logger.i(TAG, "restoreInstanceState", "group", mGroupId, "entry", mEntryId);
-	}
-	
-	private class PagerAdapter extends FragmentStatePagerAdapter
-	{
-		public PagerAdapter(FragmentManager fm)
-		{
-			super(fm);
-		}
-		
-		@Override
-		public int getCount()
-		{
-			if (PocketLock.getPocketLock(mCallingPackage) == null)
-			{
-				return 0;
-			}
-			else if (mEntryId < 0)
-			{
-				return 1;
-			}
-			else
-			{
-				return 2;
-			}
-		}
-
-		@Override
-		public Fragment getItem(int position)
-		{
-			switch (position)
-			{
-				case 0:
-					return createEntryListFragment();
-				case 1:
-					return createEntryDetailsFragment();
-				default:
-					return null;
-			}
-		}
-
-		@Override
-		public int getItemPosition(Object object)
-		{
-			Fragment f = (Fragment) object;
-			Bundle arg = f.getArguments();
-			if (arg == null || arg.getString(ARG_TAG) == null)
-			{
-				throw new IllegalStateException("fragment does not have argument.");
-			}
-
-			String tag = arg.getString(ARG_TAG);
-			if (TAG_ENTRY_LIST.equals(tag))
-			{
-				if (mGroupId == arg.getInt(EntriesFragment.ARG_GROUP_ID))
-				{
-					return POSITION_UNCHANGED;
-				}
-			}
-			else if (TAG_ENTRY_DETAILS.equals(tag))
-			{
-				if (mEntryId == arg.getInt(FieldsFragment.ARG_ENTRY_ID))
-				{
-					return POSITION_UNCHANGED;
-				}
-			}
-			
-			return POSITION_NONE;
-		}
 	}
 	
 	@Override
@@ -158,7 +102,6 @@ implements OnListItemSelectedListener
 	{
 		Logger.i(TAG, "onCreate", (savedInstanceState != null) ? "with state" : null);
 		super.onCreate(savedInstanceState);
-		restoreInstanceState(savedInstanceState);
 
 		if (!PocketDatabase.isReadable())
 		{
@@ -197,8 +140,8 @@ implements OnListItemSelectedListener
 		mPager = (ViewPager) findViewById(R.id.pager);
 		mPagerAdapter = new PagerAdapter(getSupportFragmentManager());
 		mPager.setAdapter(mPagerAdapter);
-		
-		mPager.setCurrentItem(Math.max(0, mPagerAdapter.getCount() - 1));
+
+		restoreInstanceState(savedInstanceState);
 		
 		actionBar.setListNavigationCallbacks(
 			mGroupAdapter,
@@ -207,8 +150,11 @@ implements OnListItemSelectedListener
 			@Override
 			public boolean onNavigationItemSelected(int itemPosition, long itemId)
 			{
-				mGroupId = mGroupAdapter.getItem(itemPosition).id;
-				mPagerAdapter.notifyDataSetChanged();
+				if (mGroupId != mGroupAdapter.getItem(itemPosition).id)
+				{
+					mGroupId = mGroupAdapter.getItem(itemPosition).id;
+					setPage(0, EntriesFragment.TAG, EntriesFragment.newArgument(mCallingPackage, mGroupId, null), false);
+				}
 				return true;
 			}});
 		
@@ -284,40 +230,19 @@ implements OnListItemSelectedListener
 		}
 	}
 
-	private Fragment createEntryDetailsFragment()
-	{
-		Log.i(TAG, "createEntryDetailsFragment");
-
-		Bundle args = new Bundle();
-		args.putString(ARG_TAG, TAG_ENTRY_DETAILS);
-
-		return FieldsFragment.createInstance(mCallingPackage, mEntryId, args);
-	}
-
-	private Fragment createEntryListFragment()
-	{
-		Log.i(TAG, "createEntryListFragment");
-
-		Bundle args = new Bundle();
-		args.putString(ARG_TAG, TAG_ENTRY_LIST);
-
-		return EntriesFragment.createInstance(mCallingPackage, mGroupId, args);
-	}
-
 	@Override
 	public void onListItemSelected(Fragment f, Object data)
 	{
 		String tag = f.getArguments().getString(ARG_TAG);
 		
-		if (TAG_ENTRY_LIST.equals(tag))
+		if (EntriesFragment.TAG.equals(tag))
 		{
 			EntryInfo item = (EntryInfo)data;
 			Logger.i(TAG, "onListItemSelected", tag, item.id);
 			mEntryId = item.id;
-			mPagerAdapter.notifyDataSetChanged();
-			mPager.setCurrentItem(1);
+			setPage(1, FieldsFragment.TAG, FieldsFragment.newArgument(mCallingPackage, mEntryId, null), false);
 		}
-		else if (TAG_ENTRY_DETAILS.equals(tag))
+		else if (FieldsFragment.TAG.equals(tag))
 		{
 			FieldInfo item = (FieldInfo)data;
 			Logger.i(TAG, "onListItemSelected", tag, item.id);
@@ -363,13 +288,126 @@ implements OnListItemSelectedListener
 		setResult(RESULT_OK, data);
 		finish();
 	}
+	
+	private void setPage(int position, String tag, Bundle arg, boolean pop)
+	{
+		if (arg == null)
+		{
+			throw new IllegalArgumentException("arg must not be null.");
+		}
+		
+		if (mFragmentArguments.size() < position)
+		{
+			throw new IllegalStateException();
+		}
 
+		arg.putString(ARG_TAG, tag);
+		arg.putInt(ARG_POSITION, position);
+
+		Utilities.setDigest(arg, ARG_DIGEST);
+
+		if (position == mFragmentArguments.size())
+		{
+			mFragmentArguments.add(arg);
+		}
+		else
+		{
+			if (pop)
+			{
+				while (position + 1 < mFragmentArguments.size())
+				{
+					mFragmentArguments.remove(mFragmentArguments.size() - 1);
+				}
+			}
+			mFragmentArguments.set(position, arg);
+		}
+
+		if (mPagerAdapter != null)
+		{
+			mPagerAdapter.notifyDataSetChanged();
+		}
+
+		if (mPager != null)
+		{
+			mPager.setCurrentItem(position);
+		}
+	}
+	
+	private void calcArgumentsDigest(Bundle arg)
+	{
+	}
+
+	private class PagerAdapter extends FragmentStatePagerAdapter
+	{
+		public PagerAdapter(FragmentManager fm)
+		{
+			super(fm);
+		}
+		
+		@Override
+		public int getCount()
+		{
+			return mFragmentArguments.size();
+		}
+
+		@Override
+		public Fragment getItem(int position)
+		{
+			if (position >= mFragmentArguments.size())
+			{
+				return null;
+			}
+			else
+			{
+				Logger.i(TAG, "PagerAdapter.getItem");
+
+				Fragment f = null;
+				Bundle arg = mFragmentArguments.get(position);
+				String tag = arg.getString(ARG_TAG);
+
+				if (EntriesFragment.TAG.equals(tag))
+				{
+					f = new EntriesFragment();
+				}
+				else if (FieldsFragment.TAG.equals(tag))
+				{
+					f = new FieldsFragment();
+				}
+				else
+				{
+					return null;
+				}
+				
+				f.setArguments(arg);
+				return f;
+			}
+		}
+
+		@Override
+		public int getItemPosition(Object object)
+		{
+			Fragment f = (Fragment) object;
+			Bundle arg1 = f.getArguments();
+			int position = arg1.getInt(ARG_POSITION);
+			Bundle arg2 = mFragmentArguments.get(position);
+			String digest = arg1.getString(ARG_DIGEST);
+			if (digest.equals(arg2.getString(ARG_DIGEST)))
+			{
+				return POSITION_UNCHANGED;
+			}
+			else
+			{
+				return POSITION_NONE;
+			}
+		}
+	}
+	
 	private final LoaderCallbacks<List<GroupInfo>> mGroupInfoLoaderCallbacks = new LoaderCallbacks<List<GroupInfo>>()
 	{
 		@Override
 		public Loader<List<GroupInfo>> onCreateLoader(int id, Bundle arg)
 		{
-			Logger.i(TAG, "onCreateLoader");
+			Logger.i(TAG, "LoaderCallbacks.onCreateLoader");
 			switch (id)
 			{
 			case 0:
@@ -381,7 +419,7 @@ implements OnListItemSelectedListener
 		@Override
 		public void onLoadFinished(Loader<List<GroupInfo>> loader, List<GroupInfo> data)
 		{
-			Logger.i(TAG, "onLoadFinished");
+			Logger.i(TAG, "LoaderCallbacks.onLoadFinished");
 			mGroupAdapter.clear();
 			if (data != null)
 			{

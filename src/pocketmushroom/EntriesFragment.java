@@ -26,14 +26,13 @@ public class EntriesFragment extends CustomListFragment
 	implements
 		LoaderCallbacks<List<EntryInfo>>
 {
+	public static final String TAG = EntriesFragment.class.getSimpleName();
 	public static final String ARG_PACKAGE_NAME = "package_name";
 	public static final String ARG_GROUP_ID = "group_id";
 
-	private static final String TAG = EntriesFragment.class.getSimpleName();
-
 	private ArrayAdapter<EntryInfo> mAdapter;
 
-	public static EntriesFragment createInstance(
+	public static Bundle newArgument(
 		String packageName,
 		int groupId,
 		Bundle extra)
@@ -46,10 +45,7 @@ public class EntriesFragment extends CustomListFragment
 		extra.putString(ARG_PACKAGE_NAME, packageName);
 		extra.putInt(ARG_GROUP_ID, groupId);
 
-		EntriesFragment f = new EntriesFragment();
-		f.setArguments(extra);
-
-		return f;
+		return extra;
 	}
 
 	@Override

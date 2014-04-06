@@ -33,14 +33,13 @@ public class FieldsFragment extends CustomListFragment
 	implements
 		LoaderCallbacks<List<FieldInfo>>
 {
+	public static final String TAG = FieldsFragment.class.getSimpleName();
 	public static final String ARG_PACKAGE_NAME = "package_name";
 	public static final String ARG_ENTRY_ID = "entry_id";
 
-	private static final String TAG = FieldsFragment.class.getSimpleName();
-
 	private ArrayAdapter<FieldInfo> mAdapter;
 
-	public static FieldsFragment createInstance(
+	public static Bundle newArgument(
 		String packageName,
 		int entryId,
 		Bundle extra)
@@ -53,10 +52,7 @@ public class FieldsFragment extends CustomListFragment
 		extra.putString(ARG_PACKAGE_NAME, packageName);
 		extra.putInt(ARG_ENTRY_ID, entryId);
 
-		FieldsFragment f = new FieldsFragment();
-		f.setArguments(extra);
-
-		return f;
+		return extra;
 	}
 
 	@Override
